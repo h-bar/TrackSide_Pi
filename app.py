@@ -1,34 +1,11 @@
-# Quit Button Setup
-from signal import signal, SIGINT
-from sys import exit
 
-# import RPi.GPIO as GPIO
-# GPIO.setmode(GPIO.BCM)
-
-# quit_button = 17
-# GPIO.setup(quit_button, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-
-def _quit():
-    # GPIO.cleanup()
-    exit(0)
-
-def quit_cb(channel):
-    _quit()
-
-def quit_sig(signal_received, frame):
-    _quit()
-
-# GPIO.add_event_detect(quit_button, GPIO.FALLING, callback=quit_cb, bouncetime=300)
-signal(SIGINT, quit_sig)
-
-
-# Actual code starts from here
 import time
 import sys
 import pygame
+import pygame.camera
 from pygame.locals import *
 import os
-
+import random
 # os.putenv('SDL_VIDEODRIVER', 'fbcon')   # Display on piTFT#
 # os.putenv('SDL_FBDEV', '/dev/fb1')
 # os.putenv('SDL_MOUSEDRV', 'TSLIB')     # Track mouse clicks on piTFT
@@ -39,163 +16,231 @@ WHITE = 255, 255, 255
 BLACK = 0,0,0
 RED = 255, 0, 0
 GREEN = 0, 255, 0
+GREY = 128,128,128
+
+SCREEN_SIZE = (640,480)
+VIDEO_SIZE  = (640,480)
 
 pygame.init()
-pygame.mouse.set_visible(False)
+pygame.camera.init()
+# pygame.mouse.set_visible(False)
 
-screen = pygame.display.set_mode((320, 240))
-setting_labels = [
-  {
+screen = pygame.display.set_mode(SCREEN_SIZE)
+cam = pygame.camera.Camera('/dev/video0', VIDEO_SIZE)
+snapshot = pygame.surface.Surface(VIDEO_SIZE, 0, screen)
+
+setting_labels = {
+  'cam': {
+    'dev': 'cam',
     'text': 'Video',
-    'pos': (80, 40),
-    'font': pygame.font.Font(None, 30),
-    'on': False,
-  },
-  {
-    'text': 'Audio',
-    'pos': (80, 80),
-    'font': pygame.font.Font(None, 30),
-    'on': False
-  },
-  {
-    'text': 'GPS',
-    'pos': (80, 120),
-    'font': pygame.font.Font(None, 30),
-    'on': False
-  },
-  {
-    'text': 'Acce',
-    'pos': (80, 160),
-    'font': pygame.font.Font(None, 30),
-    'on': False
-  },
-  {
-    'text': 'RPM',
-    'pos': (80, 200),
-    'font': pygame.font.Font(None, 30),
-    'on': False
-  },
-  {
-    'text': 'Speed',
-    'pos': (220, 40),
-    'font': pygame.font.Font(None, 30),
-    'on': False
-  },
-  {
-    'text': 'Coolant',
-    'pos': (220, 80),
-    'font': pygame.font.Font(None, 30),
-    'on': False
-  },
-  {
-    'text': 'Oil',
-    'pos': (220, 120),
-    'font': pygame.font.Font(None, 30),
-    'on': False
-  },
-  {
-    'text': 'Throttle',
-    'pos': (220, 160),
-    'font': pygame.font.Font(None, 30),
-    'on': False
-  },
-  {
-    'text': 'Brake',
-    'pos': (220, 200),
-    'font': pygame.font.Font(None, 30),
-    'on': False
-  },
-]
-
-value_labels = [
-  {
-    'text': 'Acce: ',
     'pos': (60, 40),
-    'font': pygame.font.Font(None, 30),
-    'value': 20,
+    'font_size': 30,
+    'on': False,
+    'online': False,
+    'value': '',
+    'unit': ''
   },
-  {
-    'text': 'RPM: ',
-    'pos': (60, 80),
-    'font': pygame.font.Font(None, 30),
-    'value': 20,
+  'mic': {
+    'dev': 'mic',
+    'text': 'Audio',
+    'pos': (160, 40),
+    'font_size': 30,
+    'on': False,
+    'online': False,
+    'value': '',
+    'unit': ''
   },
-  {
-    'text': 'Speed: ',
-    'pos': (60, 120),
-    'font': pygame.font.Font(None, 30),
+  'gps': {
+    'dev': 'gps',
+    'text': 'GPS',
+    'pos': (260, 40),
+    'font_size': 30,
+    'on': False,
+    'online': True,
+    'value': '',
+    'unit': ''
+  }, 
+  'speed': {
+    'dev': 'speed',
+    'text': '',
+    'pos': (100, 105),
+    'font_size': 55,
+    'on': False,
+    'online': True,
     'value': 20,
+    'unit': 'km/h'
   },
-  {
+  'acce': {
+    'dev': 'acce',
+    'text': '',
+    'pos': (240, 85),
+    'font_size': 35,
+    'on': True,
+    'online': True,
+    'value': 20,
+    'unit': 'm/s^2'
+  },
+  'rpm': {
+    'dev': 'rpm',
+    'text': '',
+    'pos': (240, 120),
+    'font_size': 35,
+    'on': False,
+    'online': False,
+    'value': 20,
+    'unit': 'RPM'
+  },
+  'coolant': {
+    'dev': 'coolant',
     'text': 'Coolant: ',
-    'pos': (60, 160),
-    'font': pygame.font.Font(None, 30),
+    'pos': (80, 160),
+    'font_size': 30,
+    'on': True,
+    'online': True,
     'value': 20,
+    'unit': 'F'
   },
-  {
+  'oil': {
+    'dev': 'oil',
     'text': 'Oil: ',
-    'pos': (200, 40),
-    'font': pygame.font.Font(None, 30),
+    'pos': (220, 160),
+    'font_size': 30,
+    'on': False,
+    'online': True,
     'value': 20,
+    'unit': 'F'
   },
-  {
+  'throttle': {
+    'dev': 'throttle',
     'text': 'Throttle: ',
-    'pos': (200, 80),
-    'font': pygame.font.Font(None, 30),
+    'pos': (80, 200),
+    'font_size': 30,
+    'on': False,
+    'online': True,
     'value': 20,
+    'unit': '%'
   },
-  {
+  'brake': {
+    'dev': 'brake',
     'text': 'Brake: ',
-    'pos': (200, 120),
-    'font': pygame.font.Font(None, 30),
+    'pos': (220, 200),
+    'font_size': 30,
+    'on': False,
+    'online': True,
     'value': 20,
+    'unit': 'bar'
   },
-]
-
-def button_cb(channel):
-  if channel == 17:
-    pass
-  elif channel == 22:
-    pass
-  elif channel == 23:
-    pass
-  elif channel == 27:
-    pass
+}
 
 
-def render_setting_lables(screen, labels):
-  for label in labels:
-    label_surface = label['font'].render(label['text'], True, GREEN if label['on'] else RED)
+
+cam.start()
+
+from enum import Enum
+class Views(Enum):
+  Video = 1
+  Setting = 2
+  Map = 3
+
+current_view = Views.Video
+
+def draw_video_view():
+  screen.blit(snapshot, (0,0))
+
+def draw_setting_view():
+  for dev in setting_labels:
+    label = setting_labels[dev]
+    text = label['text'] + str(label['value']) + label['unit']
+
+    text_color = WHITE
+    if not label['online']:
+      text_color = GREY
+    elif label['on']:
+      text_color = GREEN
+
+    label_surface = pygame.font.Font(None, label['font_size']).render(text, True, text_color)
+
     rect = label_surface.get_rect(center=label['pos'])
     screen.blit(label_surface, rect)
 
-def render_value_lables(screen, labels):
-  for label in labels:
-    label_surface = label['font'].render(label['text'] + str(label['value']), True, WHITE)
-    rect = label_surface.get_rect(center=label['pos'])
-    screen.blit(label_surface, rect)
+def draw_map_view():
+  pass
+
+
+def read_camara():
+  global snapshot
+  global screen
+  if cam.query_image():
+      snapshot = cam.get_image(snapshot)
+
+def read_mic():
+  pass
+
+def read_acce():
+  global setting_labels
+  setting_labels['acce']['value'] = random.randint(0, 50)
+
+def read_obd():
+  setting_labels['speed']['value'] = random.randint(0, 50)
+  setting_labels['rpm']['value'] = random.randint(0, 50)
+  setting_labels['coolant']['value'] = random.randint(0, 50)
+  setting_labels['oil']['value'] = random.randint(0, 50)
+  setting_labels['throttle']['value'] = random.randint(0, 50)
+  setting_labels['brake']['value'] = random.randint(0, 50)
+
+def read_gps():
+  pass
+
+def collect_data():
+  read_camara()
+  read_mic()
+  read_acce()
+  read_obd()
+  read_gps()
+
+def handle_events():
+  global current_view
+  events = pygame.event.get()
+  for event in events:
+    if event.type == pygame.KEYDOWN:
+      if event.key == pygame.K_v:
+        current_view = Views.Video
+      elif event.key == pygame.K_s:
+        current_view = Views.Setting
+    elif event.type == pygame.MOUSEBUTTONUP:
+      pos = pygame.mouse.get_pos()
+      for dev in setting_labels:
+        label = setting_labels[dev]
+        if pos[0] > label['pos'][0] - (label['font_size']):
+          if pos[0] < label['pos'][0] + (label['font_size']):
+            if pos[1] > label['pos'][1]- (label['font_size'] / 2):
+              if pos[1] < label['pos'][1] + (label['font_size'] / 2):
+                  label['on'] = not label['on']
+                  break
 
 
 def update_screen():
-    screen.fill(BLACK)
-    # render_setting_lables(screen, setting_labels)
-    render_value_lables(screen, value_labels)
-    pygame.display.flip()
+  screen.fill(BLACK)
+  if current_view == Views.Video:
+    draw_video_view()
+  elif current_view == Views.Setting:
+    draw_setting_view()
+  elif current_view == Views.Map:
+    draw_map_view()
+  pygame.display.flip()
 
+def process_data():
+  pass
 
-def main_loop():
+def loop():
+  timer = time.time()
+
   while True:
-    for event in pygame.event.get():
-      if(event.type is MOUSEBUTTONUP):
-        pos = pygame.mouse.get_pos()
+    collect_data()
+    process_data()
+    timer = time.time()
+    update_screen()
+    handle_events()
+    time.sleep(0.02)
 
-
-# for pin in [17, 22, 23, 27]:
-#     GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-#     GPIO.add_event_detect(pin, GPIO.FALLING, callback=button_cb, bouncetime=300)
-
-update_screen()
-main_loop()
-
-_quit()
-
+loop()
