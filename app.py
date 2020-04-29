@@ -18,7 +18,7 @@ RED = 255, 0, 0
 GREEN = 0, 255, 0
 GREY = 128,128,128
 
-SCREEN_SIZE = (640,480)
+SCREEN_SIZE = (320,240)
 VIDEO_SIZE  = (640,480)
 
 pygame.init()
@@ -171,7 +171,8 @@ def read_camara():
   global snapshot
   global screen
   if cam.query_image():
-      snapshot = cam.get_image(snapshot)
+    _snapshot = cam.get_image()
+    snapshot = pygame.transform.scale(_snapshot, SCREEN_SIZE)
 
 def read_mic():
   pass
