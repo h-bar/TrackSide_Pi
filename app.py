@@ -1,4 +1,3 @@
-
 import time
 import datetime
 import sys
@@ -131,6 +130,12 @@ setting_labels = {
   },
 }
 
+recordingCircle = {
+    'color': RED,
+    'pos': (15, 15),
+    'r': 10
+}
+
 from enum import Enum
 class Views(Enum):
   Video = 1
@@ -188,12 +193,14 @@ def handle_events():
   for event in events:
     if event.type == pygame.KEYDOWN:
       if event.key == pygame.K_v:
-        current_view = Views.Video
+        button_cb(17)
       elif event.key == pygame.K_s:
-        current_view = Views.Setting
+        button_cb(22)
+      elif event.key == pygame.K_r:
+        button_cb(23)
       elif event.key == pygame.K_q:
-        _quit()
-    elif event.type == pygame.MOUSEBUTTONUP:
+        button_cb(27)
+    elif recording == False and event.type == pygame.MOUSEBUTTONUP:
       pos = pygame.mouse.get_pos()
       for dev in setting_labels:
         label = setting_labels[dev]
@@ -213,6 +220,10 @@ def update_screen():
     draw_setting_view()
   elif current_view == Views.Map:
     draw_map_view()
+
+  if recording:
+    pygame.draw.circle(screen, recordingCircle['color'], recordingCircle['pos'], recordingCircle['r'])
+  
   pygame.display.flip()
 
 def process_data():
@@ -223,19 +234,48 @@ def process_data():
   
   pass
 
-def _quit():
+def toggle_recording():
+  global recording
+  recording = not recording
+
+def end_app():
   s.release()
-  quit(0)
+  exit(0)
 
-def loop():
-  timer = time.time()
 
+# # Quit Button Setup
+# from signal import signal, SIGINT
+# from sys import exit
+
+# import RPi.GPIO as GPIO
+# GPIO.setmode(GPIO.BCM)
+
+# quit_button = 27
+# GPIO.setup(quit_button, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+
+# def _quit():
+#     GPIO.cleanup()
+#     exit(0)
+
+# for pin in [17, 22, 23, 27]:
+#     GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+#     GPIO.add_event_detect(pin, GPIO.FALLING, callback=button_cb, bouncetime=300)
+
+def button_cb(channel):
+  global current_view
+  if channel == 17:
+    current_view = Views.Video
+  elif channel == 22:
+    current_view = Views.Setting
+  elif channel == 23:
+    toggle_recording()
+  elif channel == 27:
+    end_app()
+
+if __name__ == "__main__":
   while True:
     collect_data()
     process_data()
-    timer = time.time()
     update_screen()
     handle_events()
     time.sleep(0.05)
-
-loop()
