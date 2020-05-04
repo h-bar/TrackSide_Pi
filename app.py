@@ -1,11 +1,14 @@
 
 import time
+import datetime
 import sys
 import pygame
-import pygame.camera
 from pygame.locals import *
 import os
 import random
+
+from car_sensors import sensors
+
 # os.putenv('SDL_VIDEODRIVER', 'fbcon')   # Display on piTFT#
 # os.putenv('SDL_FBDEV', '/dev/fb1')
 # os.putenv('SDL_MOUSEDRV', 'TSLIB')     # Track mouse clicks on piTFT
@@ -19,15 +22,11 @@ GREEN = 0, 255, 0
 GREY = 128,128,128
 
 SCREEN_SIZE = (320,240)
-VIDEO_SIZE  = (640,480)
-
 pygame.init()
-pygame.camera.init()
+s = sensors()
 # pygame.mouse.set_visible(False)
 
 screen = pygame.display.set_mode(SCREEN_SIZE)
-cam = pygame.camera.Camera('/dev/video0', VIDEO_SIZE)
-snapshot = pygame.surface.Surface(VIDEO_SIZE, 0, screen)
 
 setting_labels = {
   'cam': {
@@ -36,7 +35,7 @@ setting_labels = {
     'pos': (60, 40),
     'font_size': 30,
     'on': False,
-    'online': False,
+    'online': True,
     'value': '',
     'unit': ''
   },
@@ -132,10 +131,6 @@ setting_labels = {
   },
 }
 
-
-
-cam.start()
-
 from enum import Enum
 class Views(Enum):
   Video = 1
@@ -143,9 +138,10 @@ class Views(Enum):
   Map = 3
 
 current_view = Views.Video
+recording = True
 
 def draw_video_view():
-  screen.blit(snapshot, (0,0))
+  screen.blit(pygame.transform.scale(frame, SCREEN_SIZE), (0,0))
 
 def draw_setting_view():
   for dev in setting_labels:
@@ -166,38 +162,25 @@ def draw_setting_view():
 def draw_map_view():
   pass
 
-
-def read_camara():
-  global snapshot
-  global screen
-  if cam.query_image():
-    _snapshot = cam.get_image()
-    snapshot = pygame.transform.scale(_snapshot, SCREEN_SIZE)
-
-def read_mic():
-  pass
-
-def read_acce():
-  global setting_labels
-  setting_labels['acce']['value'] = random.randint(0, 50)
-
-def read_obd():
-  setting_labels['speed']['value'] = random.randint(0, 50)
-  setting_labels['rpm']['value'] = random.randint(0, 50)
-  setting_labels['coolant']['value'] = random.randint(0, 50)
-  setting_labels['oil']['value'] = random.randint(0, 50)
-  setting_labels['throttle']['value'] = random.randint(0, 50)
-  setting_labels['brake']['value'] = random.randint(0, 50)
-
-def read_gps():
-  pass
-
 def collect_data():
-  read_camara()
-  read_mic()
-  read_acce()
-  read_obd()
-  read_gps()
+  global frame
+  global setting_labels
+
+  cam_data = s.read_camara()
+  # mic = s.read_mic()  
+  odb_data = s.read_obd()
+  acce_data = s.read_acce()
+  # gps_data = s.read_gps()
+
+  if cam_data != None:
+    frame = cam_data
+  setting_labels['acce']['value'] = acce_data
+  setting_labels['rpm']['value'] = odb_data['rpm']
+  setting_labels['coolant']['value'] = odb_data['coolant']
+  setting_labels['oil']['value'] = odb_data['oil']
+  setting_labels['throttle']['value'] = odb_data['throttle']
+  setting_labels['brake']['value'] = odb_data['brake']
+
 
 def handle_events():
   global current_view
@@ -208,6 +191,8 @@ def handle_events():
         current_view = Views.Video
       elif event.key == pygame.K_s:
         current_view = Views.Setting
+      elif event.key == pygame.K_q:
+        _quit()
     elif event.type == pygame.MOUSEBUTTONUP:
       pos = pygame.mouse.get_pos()
       for dev in setting_labels:
@@ -231,7 +216,16 @@ def update_screen():
   pygame.display.flip()
 
 def process_data():
+  # if recording:
+  #   timestamp = str(datetime.datetime.now().timestamp())
+  #   if setting_labels['cam']['on']:
+  #     pygame.image.save(frame, './recording/' + timestamp + '.BMP')
+  
   pass
+
+def _quit():
+  s.release()
+  quit(0)
 
 def loop():
   timer = time.time()
@@ -242,6 +236,6 @@ def loop():
     timer = time.time()
     update_screen()
     handle_events()
-    time.sleep(0.02)
+    time.sleep(0.05)
 
 loop()
