@@ -23,6 +23,10 @@ GREY = 128,128,128
 
 SCREEN_SIZE = (320,240)
 VIDEO_SIZE = (640,480)
+RECORDING_ROOT = './rcd'
+RECORDING_DIR = ''
+VIDEO_DIR = 'video'
+DATA_FILE = 'data.csv'
 CAM_DEV = '/dev/video0'
 
 pygame.init()
@@ -30,7 +34,7 @@ pygame.init()
 pygame.camera.init()
 
 screen = pygame.display.set_mode(SCREEN_SIZE)
-cam = pygame.camera.Camera('/dev/video0', VIDEO_SIZE)
+cam = pygame.camera.Camera(CAM_DEV, VIDEO_SIZE)
 frame = pygame.surface.Surface(VIDEO_SIZE, 0, screen)
   
 s = sensors()
@@ -44,6 +48,7 @@ setting_labels = {
     'pos': (60, 40),
     'font_size': 30,
     'on': False,
+    'on': False,
     'online': True,
     'value': '',
     'unit': ''
@@ -54,7 +59,7 @@ setting_labels = {
     'pos': (160, 40),
     'font_size': 30,
     'on': False,
-    'online': False,
+    'online': True,
     'value': '',
     'unit': ''
   },
@@ -94,7 +99,7 @@ setting_labels = {
     'pos': (240, 120),
     'font_size': 35,
     'on': False,
-    'online': False,
+    'online': True,
     'value': 20,
     'unit': 'RPM'
   },
@@ -108,35 +113,15 @@ setting_labels = {
     'value': 20,
     'unit': 'F'
   },
-  'oil': {
-    'dev': 'oil',
-    'text': 'Oil: ',
+  'throttle': {
+    'dev': 'throttle',
+    'text': 'Throttle: ',
     'pos': (220, 160),
     'font_size': 30,
     'on': False,
     'online': True,
     'value': 20,
-    'unit': 'F'
-  },
-  'throttle': {
-    'dev': 'throttle',
-    'text': 'Throttle: ',
-    'pos': (80, 200),
-    'font_size': 30,
-    'on': False,
-    'online': True,
-    'value': 20,
     'unit': '%'
-  },
-  'brake': {
-    'dev': 'brake',
-    'text': 'Brake: ',
-    'pos': (220, 200),
-    'font_size': 30,
-    'on': False,
-    'online': True,
-    'value': 20,
-    'unit': 'bar'
   },
 }
 
@@ -152,8 +137,8 @@ class Views(Enum):
   Setting = 2
   Map = 3
 
-current_view = Views.Video
-recording = True
+current_view = Views.Setting
+recording = False
 
 def draw_video_view():
   screen.blit(pygame.transform.scale(frame, SCREEN_SIZE), (0,0))
@@ -191,9 +176,7 @@ def collect_data():
   setting_labels['acce']['value'] = acce_data
   setting_labels['rpm']['value'] = odb_data['rpm']
   setting_labels['coolant']['value'] = odb_data['coolant']
-  setting_labels['oil']['value'] = odb_data['oil']
   setting_labels['throttle']['value'] = odb_data['throttle']
-  setting_labels['brake']['value'] = odb_data['brake']
 
 
 def handle_events():
@@ -236,16 +219,23 @@ def update_screen():
   pygame.display.flip()
 
 def process_data():
-  # if recording:
-  #   timestamp = str(datetime.datetime.now().timestamp())
-  #   if setting_labels['cam']['on']:
-  #     pygame.image.save(frame, './recording/' + timestamp + '.BMP')
+  if recording:
+    timestamp = str(datetime.datetime.now())
+    if setting_labels['cam']['on']:
+      pygame.image.save(frame, RECORDING_DIR + '/' + VIDEO_DIR + '/' +  timestamp + '.BMP')
   
   pass
 
 def toggle_recording():
   global recording
+  global RECORDING_DIR
   recording = not recording
+
+  if recording:
+    RECORDING_DIR = RECORDING_ROOT + '/' + str(datetime.datetime.now())
+    os.makedirs(RECORDING_DIR)
+    os.makedirs(RECORDING_DIR+'/'+VIDEO_DIR)   
+    print("Recording start, saving to ", RECORDING_DIR)
 
 def end_app():
   s.release()
