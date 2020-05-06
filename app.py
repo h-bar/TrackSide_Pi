@@ -2,6 +2,7 @@ import time
 import datetime
 import sys
 import pygame
+import pygame.camera
 from pygame.locals import *
 import os
 import random
@@ -21,11 +22,20 @@ GREEN = 0, 255, 0
 GREY = 128,128,128
 
 SCREEN_SIZE = (320,240)
+VIDEO_SIZE = (640,480)
+CAM_DEV = '/dev/video0'
+
 pygame.init()
-s = sensors()
 # pygame.mouse.set_visible(False)
+pygame.camera.init()
 
 screen = pygame.display.set_mode(SCREEN_SIZE)
+cam = pygame.camera.Camera('/dev/video0', VIDEO_SIZE)
+frame = pygame.surface.Surface(VIDEO_SIZE, 0, screen)
+  
+s = sensors()
+cam.start()
+
 
 setting_labels = {
   'cam': {
@@ -170,15 +180,14 @@ def draw_map_view():
 def collect_data():
   global frame
   global setting_labels
+  if cam.query_image():
+    frame = cam.get_image(frame)
 
-  cam_data = s.read_camara()
   # mic = s.read_mic()  
   odb_data = s.read_obd()
   acce_data = s.read_acce()
   # gps_data = s.read_gps()
 
-  if cam_data != None:
-    frame = cam_data
   setting_labels['acce']['value'] = acce_data
   setting_labels['rpm']['value'] = odb_data['rpm']
   setting_labels['coolant']['value'] = odb_data['coolant']
