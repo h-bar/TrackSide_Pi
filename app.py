@@ -9,10 +9,10 @@ import random
 
 from car_sensors import sensors
 
-# os.putenv('SDL_VIDEODRIVER', 'fbcon')   # Display on piTFT#
-# os.putenv('SDL_FBDEV', '/dev/fb1')
-# os.putenv('SDL_MOUSEDRV', 'TSLIB')     # Track mouse clicks on piTFT
-# os.putenv('SDL_MOUSEDEV', '/dev/input/touchscreen')
+os.putenv('SDL_VIDEODRIVER', 'fbcon')   # Display on piTFT#
+os.putenv('SDL_FBDEV', '/dev/fb1')
+os.putenv('SDL_MOUSEDRV', 'TSLIB')     # Track mouse clicks on piTFT
+os.putenv('SDL_MOUSEDEV', '/dev/input/touchscreen')
 
 
 WHITE = 255, 255, 255
@@ -30,7 +30,7 @@ DATA_FILE = 'data.csv'
 CAM_DEV = '/dev/video0'
 
 pygame.init()
-# pygame.mouse.set_visible(False)
+pygame.mouse.set_visible(False)
 pygame.camera.init()
 
 screen = pygame.display.set_mode(SCREEN_SIZE)
@@ -71,7 +71,9 @@ setting_labels = {
     'on': False,
     'online': True,
     'value': '',
-    'unit': ''
+    'unit': '',
+    'lat': 0,
+    'lon': 0
   }, 
   'speed': {
     'dev': 'speed',
@@ -168,15 +170,30 @@ def collect_data():
   if cam.query_image():
     frame = cam.get_image(frame)
 
+  gps_data = s.read_gps()
+  if gps_data != None:
+    setting_labels['gps']['lat'] = gps_data['lat']
+    setting_labels['gps']['lon'] = gps_data['lon']
+    print('GPS:', setting_labels['gps']['lat'],  setting_labels['gps']['lon'])
+
+  acce_data = s.read_acce()
+  setting_labels['acce']['value'] = acce_data
+  print('Acce:', setting_labels['acce']['value'])
+  
   # mic = s.read_mic()  
   odb_data = s.read_obd()
-  acce_data = s.read_acce()
-  # gps_data = s.read_gps()
-
-  setting_labels['acce']['value'] = acce_data
-  setting_labels['rpm']['value'] = odb_data['rpm']
-  setting_labels['coolant']['value'] = odb_data['coolant']
-  setting_labels['throttle']['value'] = odb_data['throttle']
+  if odb_data['speed'] != None:
+    setting_labels['speed']['value'] = odb_data['speed']
+    print('speed:', setting_labels['speed']['value'])
+  if odb_data['rpm'] != None:
+    setting_labels['rpm']['value'] = odb_data['rpm']
+    print('rpm:', setting_labels['rpm']['value'])
+  if odb_data['coolant'] != None:
+    setting_labels['coolant']['value'] = odb_data['coolant']
+    print('coolant:', setting_labels['coolant']['value'])
+  if odb_data['speed'] != None:
+    setting_labels['speed']['value'] = odb_data['throttle']
+    print('speed:', setting_labels['speed']['value'])
 
 
 def handle_events():
@@ -242,23 +259,19 @@ def end_app():
   exit(0)
 
 
-# # Quit Button Setup
-# from signal import signal, SIGINT
-# from sys import exit
+# Quit Button Setup
+from signal import signal, SIGINT
+from sys import exit
 
-# import RPi.GPIO as GPIO
-# GPIO.setmode(GPIO.BCM)
+import RPi.GPIO as GPIO
+GPIO.setmode(GPIO.BCM)
 
-# quit_button = 27
-# GPIO.setup(quit_button, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+quit_button = 27
+GPIO.setup(quit_button, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
-# def _quit():
-#     GPIO.cleanup()
-#     exit(0)
-
-# for pin in [17, 22, 23, 27]:
-#     GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-#     GPIO.add_event_detect(pin, GPIO.FALLING, callback=button_cb, bouncetime=300)
+def _quit():
+    GPIO.cleanup()
+    exit(0)
 
 def button_cb(channel):
   global current_view
@@ -269,7 +282,11 @@ def button_cb(channel):
   elif channel == 23:
     toggle_recording()
   elif channel == 27:
-    end_app()
+    _quit()
+
+for pin in [17, 22, 23, 27]:
+    GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.add_event_detect(pin, GPIO.FALLING, callback=button_cb, bouncetime=300)
 
 if __name__ == "__main__":
   while True:
