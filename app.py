@@ -80,37 +80,57 @@ setting_labels = {
   'speed': {
     'dev': 'speed',
     'text': '',
-    'pos': (100, 105),
+    'pos': (100, 100),
     'font_size': 55,
     'on': False,
     'online': True,
     'value': 20,
     'unit': 'km/h'
   },
-  'acce': {
-    'dev': 'acce',
-    'text': '',
-    'pos': (240, 85),
-    'font_size': 35,
-    'on': True,
-    'online': True,
-    'value': 20,
-    'unit': 'm/s^2'
-  },
   'rpm': {
     'dev': 'rpm',
     'text': '',
-    'pos': (240, 120),
-    'font_size': 35,
+    'pos': (240, 100),
+    'font_size': 40,
     'on': False,
     'online': True,
     'value': 20,
     'unit': 'RPM'
   },
+  'acce-x': {
+    'dev': 'acce',
+    'text': 'X: ',
+    'pos': (60, 160),
+    'font_size': 30,
+    'on': True,
+    'online': True,
+    'value': 20,
+    'unit': ''
+  },
+  'acce-y': {
+    'dev': 'acce',
+    'text': 'Y: ',
+    'pos': (160, 160),
+    'font_size': 30,
+    'on': True,
+    'online': True,
+    'value': 20,
+    'unit': ''
+  },
+  'acce-z': {
+    'dev': 'acce',
+    'text': 'Z: ',
+    'pos': (260, 160),
+    'font_size': 30,
+    'on': True,
+    'online': True,
+    'value': 20,
+    'unit': ''
+  },
   'coolant': {
     'dev': 'coolant',
     'text': 'Coolant: ',
-    'pos': (80, 160),
+    'pos': (80, 200),
     'font_size': 30,
     'on': True,
     'online': True,
@@ -120,7 +140,7 @@ setting_labels = {
   'throttle': {
     'dev': 'throttle',
     'text': 'Throttle: ',
-    'pos': (220, 160),
+    'pos': (220, 200),
     'font_size': 30,
     'on': False,
     'online': True,
@@ -179,28 +199,30 @@ def collect_data():
 
   gps_data = s.read_gps()
   if gps_data != None:
-    setting_labels['gps']['lat'] = gps_data['lat']
-    setting_labels['gps']['lon'] = gps_data['lon']
+    setting_labels['gps']['lat'] = round(gps_data['lat'], 1)
+    setting_labels['gps']['lon'] = round(gps_data['lon'], 1)
     print('GPS:', setting_labels['gps']['lat'],  setting_labels['gps']['lon'])
 
-  acce_data = s.read_acce()
-  setting_labels['acce']['value'] = acce_data
-  print('Acce:', setting_labels['acce']['value'])
+  x, y, z = s.read_acce()
+  setting_labels['acce-x']['value'] = round(x, 1)
+  setting_labels['acce-y']['value'] = round(y, 1)
+  setting_labels['acce-z']['value'] = round(z, 1)
+  # print('Acce:', setting_labels['acce']['value'])
   
   # mic = s.read_mic()  
   odb_data = s.read_obd()
   if odb_data['speed'] != None:
-    setting_labels['speed']['value'] = odb_data['speed']
+    setting_labels['speed']['value'] = round(odb_data['speed'], 1)
     print('speed:', setting_labels['speed']['value'])
   if odb_data['rpm'] != None:
-    setting_labels['rpm']['value'] = odb_data['rpm']
+    setting_labels['rpm']['value'] = round(odb_data['rpm'], 1)
     print('rpm:', setting_labels['rpm']['value'])
   if odb_data['coolant'] != None:
-    setting_labels['coolant']['value'] = odb_data['coolant']
+    setting_labels['coolant']['value'] = round(odb_data['coolant'], 1)
     print('coolant:', setting_labels['coolant']['value'])
   if odb_data['speed'] != None:
-    setting_labels['speed']['value'] = odb_data['throttle']
-    print('speed:', setting_labels['speed']['value'])
+    setting_labels['throttle']['value'] =round( odb_data['throttle'], 1)
+    print('throttle:', setting_labels['throttle']['value'])
 
 
 def handle_events():
