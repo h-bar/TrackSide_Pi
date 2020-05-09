@@ -266,10 +266,21 @@ def toggle_recording():
       pass
     notification('Recording Saved!')
     time.sleep(1)
+
 def end_app():
   s.release()
   exit(0)
 
+def button_cb(channel):
+  global current_view
+  if channel == 17:
+    current_view = Views.Video
+  elif channel == 22:
+    current_view = Views.Setting
+  elif channel == 23:
+    toggle_recording()
+  elif channel == 27:
+    _quit()
 
 # # Quit Button Setup
 # from signal import signal, SIGINT
@@ -283,18 +294,7 @@ def end_app():
 
 def _quit():
     # GPIO.cleanup()
-    exit(0)
-
-def button_cb(channel):
-  global current_view
-  if channel == 17:
-    current_view = Views.Video
-  elif channel == 22:
-    current_view = Views.Setting
-  elif channel == 23:
-    toggle_recording()
-  elif channel == 27:
-    _quit()
+    end_app()
 
 # for pin in [17, 22, 23, 27]:
 #     GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
