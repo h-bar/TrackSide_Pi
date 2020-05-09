@@ -74,8 +74,8 @@ class sensors:
     }
 
   def read_gps(self):
-    line = self.gps.readline().decode("ascii") 
     try:
+      line = self.gps.readline().decode("ascii") 
       msg = pynmea2.parse(line)
     except:
       return None
