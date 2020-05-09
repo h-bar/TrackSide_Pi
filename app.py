@@ -26,9 +26,10 @@ GREY = 128,128,128
 SCREEN_SIZE = (320,240)
 VIDEO_SIZE = (640,480)
 RECORDING_ROOT = './rcd'
-RECORDING_DIR = ''
-VIDEO_DIR = 'video'
-DATA_FILE = 'data.csv'
+IMG_DIR = ''
+VIDEO_FILE = ''
+DATA_FILE = ''
+data_f = None
 CAM_DEV = '/dev/video0'
 
 pygame.init()
@@ -201,7 +202,7 @@ def collect_data():
   if gps_data != None:
     setting_labels['gps']['lat'] = round(gps_data['lat'], 1)
     setting_labels['gps']['lon'] = round(gps_data['lon'], 1)
-    print('GPS:', setting_labels['gps']['lat'],  setting_labels['gps']['lon'])
+    # print('GPS:', setting_labels['gps']['lat'],  setting_labels['gps']['lon'])
 
   x, y, z = s.read_acce()
   setting_labels['acce-x']['value'] = round(x, 1)
@@ -213,16 +214,16 @@ def collect_data():
   odb_data = s.read_obd()
   if odb_data['speed'] != None:
     setting_labels['speed']['value'] = round(odb_data['speed'], 1)
-    print('speed:', setting_labels['speed']['value'])
+    # print('speed:', setting_labels['speed']['value'])
   if odb_data['rpm'] != None:
     setting_labels['rpm']['value'] = round(odb_data['rpm'], 1)
-    print('rpm:', setting_labels['rpm']['value'])
+    # print('rpm:', setting_labels['rpm']['value'])
   if odb_data['coolant'] != None:
     setting_labels['coolant']['value'] = round(odb_data['coolant'], 1)
-    print('coolant:', setting_labels['coolant']['value'])
+    # print('coolant:', setting_labels['coolant']['value'])
   if odb_data['speed'] != None:
     setting_labels['throttle']['value'] =round( odb_data['throttle'], 1)
-    print('throttle:', setting_labels['throttle']['value'])
+    # print('throttle:', setting_labels['throttle']['value'])
 
 
 def handle_events():
@@ -264,29 +265,81 @@ def update_screen():
 
 def process_data():
   if recording:
-    timestamp = str(datetime.datetime.now())
+    timestamp = str(datetime.datetime.now().timestamp())
+    rcd_string = timestamp + ';'
     if setting_labels['cam']['on']:
-      pygame.image.save(frame, RECORDING_DIR + '/' + VIDEO_DIR + '/' +  timestamp + '.BMP')
-  
+      pygame.image.save(frame, IMG_DIR + '/' +  timestamp + '.BMP')
+    if setting_labels['mic']['on']:
+      pass
+    
+    if setting_labels['acce-x']['on']:
+      rcd_string += str(setting_labels['acce-x']['value']) + ';'
+    if setting_labels['acce-y']['on']:
+      rcd_string += str(setting_labels['acce-y']['value']) + ';'
+    if setting_labels['acce-z']['on']:
+      rcd_string += str(setting_labels['acce-y']['value']) + ';'
+    if setting_labels['rpm']['on']:
+      rcd_string += str(setting_labels['rpm']['value']) + ';'
+    if setting_labels['gps']['on']:
+      rcd_string += str(setting_labels['gps']['lat']) + ';' +  str(setting_labels['gps']['lon']) + ';'
+    if setting_labels['speed']['on']:
+      rcd_string += str(setting_labels['speed']['value']) + ';'
+    if setting_labels['coolant']['on']:
+      rcd_string += str(setting_labels['coolant']['value']) + ';'
+    if setting_labels['throttle']['on']:
+      rcd_string += str(setting_labels['throttle']['value']) + ';'
+    rcd_string += '\n'
+    data_f.write(rcd_string)
   pass
 
 def toggle_recording():
   global recording
-  global RECORDING_DIR
+  global DATA_FILE
+  global IMG_DIR
+  global VIDEO_FILE
+  global data_f
   recording = not recording
-  stamp = str(datetime.datetime.now())
+  
   if recording:
-    RECORDING_DIR = RECORDING_ROOT + '/' + stamp
-    os.makedirs(RECORDING_DIR)
-    os.makedirs(RECORDING_DIR+'/'+VIDEO_DIR)   
-    print("Recording start, saving to ", RECORDING_DIR)
+    stamp = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+
+    DATA_FILE = RECORDING_ROOT + '/' + stamp + '/' + stamp + '.csv'
+    IMG_DIR = RECORDING_ROOT + '/' + stamp + '/imgs'
+    VIDEO_FILE = RECORDING_ROOT + '/' + stamp + '/' + stamp + '.mp4'
+    
+    print(DATA_FILE)
+    print(IMG_DIR)
+    print(VIDEO_FILE)
+
+    os.makedirs(IMG_DIR)
+    data_f = open(DATA_FILE, "w")
+    rcd_string = 'timestamp;'
+    if setting_labels['acce-x']['on']:
+      rcd_string += 'acce-x;'
+    if setting_labels['acce-y']['on']:
+      rcd_string += 'acce-y;'
+    if setting_labels['acce-z']['on']:
+      rcd_string += 'acce-z;'
+    if setting_labels['rpm']['on']:
+      rcd_string += 'rpm;'
+    if setting_labels['gps']['on']:
+      rcd_string += 'gps-lat;gps-lon;'
+    if setting_labels['speed']['on']:
+      rcd_string += 'speed;'
+    if setting_labels['coolant']['on']:
+      rcd_string += 'coolant;'
+    if setting_labels['throttle']['on']:
+      rcd_string += 'throttle;'
+    rcd_string += '\n'
+    data_f.write(rcd_string)
   else:
     notification('Saving Recording....')
     try:
-      ffmpeg.input(RECORDING_DIR+'/'+VIDEO_DIR + '/*.BMP', pattern_type='glob', framerate=14).output(RECORDING_DIR+'/'+VIDEO_DIR + '/' + stamp + '.mp4').run()
+      ffmpeg.input(IMG_DIR + '/*.BMP', pattern_type='glob', framerate=47).output(VIDEO_FILE).run()
     except:
       pass
     notification('Recording Saved!')
+    data_f.close()
     time.sleep(1)
 
 def end_app():
@@ -328,4 +381,4 @@ if __name__ == "__main__":
     process_data()
     update_screen()
     handle_events()
-    time.sleep(0.05)
+    time.sleep(0.01)
