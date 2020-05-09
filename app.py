@@ -6,13 +6,15 @@ import pygame.camera
 from pygame.locals import *
 import os
 import random
+import ffmpeg
 
-from car_sensors import sensors
+# from car_sensors import sensors
+from simu_sensors import sensors
 
-os.putenv('SDL_VIDEODRIVER', 'fbcon')   # Display on piTFT#
-os.putenv('SDL_FBDEV', '/dev/fb1')
-os.putenv('SDL_MOUSEDRV', 'TSLIB')     # Track mouse clicks on piTFT
-os.putenv('SDL_MOUSEDEV', '/dev/input/touchscreen')
+# os.putenv('SDL_VIDEODRIVER', 'fbcon')   # Display on piTFT#
+# os.putenv('SDL_FBDEV', '/dev/fb1')
+# os.putenv('SDL_MOUSEDRV', 'TSLIB')     # Track mouse clicks on piTFT
+# os.putenv('SDL_MOUSEDEV', '/dev/input/touchscreen')
 
 
 WHITE = 255, 255, 255
@@ -30,7 +32,7 @@ DATA_FILE = 'data.csv'
 CAM_DEV = '/dev/video0'
 
 pygame.init()
-pygame.mouse.set_visible(False)
+# pygame.mouse.set_visible(False)
 pygame.camera.init()
 
 screen = pygame.display.set_mode(SCREEN_SIZE)
@@ -137,7 +139,6 @@ from enum import Enum
 class Views(Enum):
   Video = 1
   Setting = 2
-  Map = 3
 
 current_view = Views.Setting
 recording = False
@@ -161,7 +162,13 @@ def draw_setting_view():
     rect = label_surface.get_rect(center=label['pos'])
     screen.blit(label_surface, rect)
 
-def draw_map_view():
+def notification(text):
+  screen.fill(BLACK)
+  label_surface = pygame.font.Font(None, 40).render(text, True, WHITE)
+
+  rect = label_surface.get_rect(center=(SCREEN_SIZE[0]/2, SCREEN_SIZE[1]/2))
+  screen.blit(label_surface, rect)
+  pygame.display.flip()
   pass
 
 def collect_data():
@@ -227,8 +234,6 @@ def update_screen():
     draw_video_view()
   elif current_view == Views.Setting:
     draw_setting_view()
-  elif current_view == Views.Map:
-    draw_map_view()
 
   if recording:
     pygame.draw.circle(screen, recordingCircle['color'], recordingCircle['pos'], recordingCircle['r'])
@@ -247,30 +252,37 @@ def toggle_recording():
   global recording
   global RECORDING_DIR
   recording = not recording
-
+  stamp = str(datetime.datetime.now())
   if recording:
-    RECORDING_DIR = RECORDING_ROOT + '/' + str(datetime.datetime.now())
+    RECORDING_DIR = RECORDING_ROOT + '/' + stamp
     os.makedirs(RECORDING_DIR)
     os.makedirs(RECORDING_DIR+'/'+VIDEO_DIR)   
     print("Recording start, saving to ", RECORDING_DIR)
-
+  else:
+    notification('Saving Recording....')
+    try:
+      ffmpeg.input(RECORDING_DIR+'/'+VIDEO_DIR + '/*.BMP', pattern_type='glob', framerate=14).output(RECORDING_DIR+'/'+VIDEO_DIR + '/' + stamp + '.mp4').run()
+    except:
+      pass
+    notification('Recording Saved!')
+    time.sleep(1)
 def end_app():
   s.release()
   exit(0)
 
 
-# Quit Button Setup
-from signal import signal, SIGINT
-from sys import exit
+# # Quit Button Setup
+# from signal import signal, SIGINT
+# from sys import exit
 
-import RPi.GPIO as GPIO
-GPIO.setmode(GPIO.BCM)
+# import RPi.GPIO as GPIO
+# GPIO.setmode(GPIO.BCM)
 
-quit_button = 27
-GPIO.setup(quit_button, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+# quit_button = 27
+# GPIO.setup(quit_button, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 def _quit():
-    GPIO.cleanup()
+    # GPIO.cleanup()
     exit(0)
 
 def button_cb(channel):
@@ -284,9 +296,9 @@ def button_cb(channel):
   elif channel == 27:
     _quit()
 
-for pin in [17, 22, 23, 27]:
-    GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-    GPIO.add_event_detect(pin, GPIO.FALLING, callback=button_cb, bouncetime=300)
+# for pin in [17, 22, 23, 27]:
+#     GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+#     GPIO.add_event_detect(pin, GPIO.FALLING, callback=button_cb, bouncetime=300)
 
 if __name__ == "__main__":
   while True:
