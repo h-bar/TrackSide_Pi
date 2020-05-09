@@ -1,0 +1,47 @@
+import random
+
+class sensors:
+  accelerometer = None
+  gps = None
+  obd = None
+
+  def __init__(self):
+    self.mic_init()
+    self.acce_init()
+    self.obd_init()
+    self.gps_init()
+
+  def release(self):
+    pass
+
+  def mic_init(self):
+    pass
+
+  def acce_init(self):
+    pass
+  
+  def obd_init(self):
+    pass
+
+  def gps_init(self):
+    pass
+
+  def read_mic(self):
+    pass
+
+  def read_acce(self):
+    return random.randint(0, 40)
+    
+  def read_obd(self):    
+    return {
+      'speed': random.randint(0, 40),
+      'rpm': random.randint(0, 40),
+      'coolant': random.randint(0, 40),
+      'throttle': random.randint(0, 40),
+    }
+
+  def read_gps(self):
+    return {
+      'lat': random.randint(0, 40),
+      'lon': random.randint(0, 40),
+    }
