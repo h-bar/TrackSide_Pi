@@ -49,9 +49,7 @@ class sensors:
 
   def read_acce(self):
     x, y, z = self.accelerometer.acceleration
-    # Need data processing, eliminate g from the acce data
-    acce = (x ** 2 + y ** 2 + z ** 2) ** (0.5)
-    return acce
+    return (x, y, z)
 
   def read_obd(self):
     speed = None

@@ -30,18 +30,22 @@ class sensors:
     pass
 
   def read_acce(self):
-    return random.randint(0, 40)
+    return (
+      random.randint(0, 40) / 3.534,
+      random.randint(0, 40) / 3.534,
+      random.randint(0, 40) / 3.534
+    )
     
   def read_obd(self):    
     return {
-      'speed': random.randint(0, 40),
-      'rpm': random.randint(0, 40),
-      'coolant': random.randint(0, 40),
-      'throttle': random.randint(0, 40),
+      'speed': random.randint(0, 40) / 3.534,
+      'rpm': random.randint(0, 40) / 3.534,
+      'coolant': random.randint(0, 40) / 3.534,
+      'throttle': random.randint(0, 40) / 3.534,
     }
 
   def read_gps(self):
     return {
-      'lat': random.randint(0, 40),
-      'lon': random.randint(0, 40),
+      'lat': random.randint(0, 40) / 3.534,
+      'lon': random.randint(0, 40) / 3.534,
     }
