@@ -39,6 +39,8 @@ screen = pygame.display.set_mode(SCREEN_SIZE)
 cam = pygame.camera.Camera(CAM_DEV, VIDEO_SIZE)
 frame = pygame.surface.Surface(VIDEO_SIZE, 0, screen)
 updated = True
+timestamp = 0
+num_frames = 0
 
 cam.start()
 
@@ -213,7 +215,7 @@ def collect_data():
     try:
       # print(reading)
       data = json.loads(reading)
-      print(data)
+      # print(data)
 
       setting_labels['gps']['lat'] = round(data['gps-lat'], 2)
       setting_labels['gps']['lon'] = round(data['gps-lon'], 2)
@@ -266,10 +268,12 @@ def update_screen():
 
 def process_data():
   if recording:
+    global num_frames
     timestamp = str(datetime.datetime.now().timestamp())
     rcd_string = timestamp + ';'
     if setting_labels['cam']['on']:
       pygame.image.save(frame, IMG_DIR + '/' +  timestamp + '.BMP')
+      num_frames += 1
     if setting_labels['mic']['on']:
       pass
     
@@ -298,9 +302,13 @@ def toggle_recording():
   global IMG_DIR
   global VIDEO_FILE
   global data_f
+  global timestamp
+  global num_frames
   recording = not recording
   
   if recording:
+    timestamp = time.time()
+    num_frames = 0
     stamp = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
 
     DATA_FILE = RECORDING_ROOT + '/' + stamp + '/' + stamp + '.csv'
@@ -333,9 +341,12 @@ def toggle_recording():
     rcd_string += '\n'
     data_f.write(rcd_string)
   else:
+    duration = time.time() - timestamp
+    fps = num_frames / duration
+    # print(duration, fps)
     notification('Saving Recording....')
     try:
-      ffmpeg.input(IMG_DIR + '/*.BMP', pattern_type='glob', framerate=47).output(VIDEO_FILE).run()
+      ffmpeg.input(IMG_DIR + '/*.BMP', pattern_type='glob', framerate=fps).output(VIDEO_FILE).run()
     except:
       pass
     notification('Recording Saved!')
@@ -376,10 +387,7 @@ def _quit():
 
 if __name__ == "__main__":
   while True:
-    t = time.time()
     collect_data()
     process_data()
     update_screen()
     handle_events()
-    t = time.time() - t
-    print('FPS:', 1 / t)
