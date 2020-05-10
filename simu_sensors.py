@@ -46,6 +46,6 @@ class sensors:
 
   def read_gps(self):
     return {
-      'lat': random.randint(0, 40) / 3.534,
-      'lon': random.randint(0, 40) / 3.534,
+      'lat': str(random.randint(0, 40) / 3.534),
+      'lon': str(random.randint(0, 40) / 3.534),
     }
