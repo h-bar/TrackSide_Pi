@@ -1,51 +1,66 @@
+import time
+import json
+import signal
 import random
 
-class sensors:
-  accelerometer = None
-  gps = None
-  obd = None
+FIFO = './sensors'
 
-  def __init__(self):
-    self.mic_init()
-    self.acce_init()
-    self.obd_init()
-    self.gps_init()
+###############################
+#### FIFO Init
+###############################
+fifo = open(FIFO, 'w')
 
-  def release(self):
+def randData():
+  return random.random()*10
+
+def signal_handler(sig, frame):
+  print('All connections released!')
+  exit(0)
+
+signal.signal(signal.SIGINT, signal_handler)
+
+data = {
+  'time': 0,
+  'acce-x': 0,
+  'acce-y': 0,
+  'acce-z': 0,
+  'speed': 0,
+  'rpm': 0,
+  'coolant': 0,
+  'throttle': 0,
+  'gps-lon': 0,
+  'gps-lat': 0
+}
+
+print("Piping data into FIFO", FIFO)
+while True:
+  ###############################
+  #### READ Acce
+  ###############################
+  data['acce-x'], data['acce-y'], data['acce-z'] = (randData(), randData(), randData())
+
+  ###############################
+  #### READ OBD
+  ###############################
+  try:
+    data['speed'] = randData()
+    data['rpm'] = randData()
+    data['coolant'] = randData()
+    data['throttle'] = randData()
+  except:
     pass
 
-  def mic_init(self):
-    pass
 
-  def acce_init(self):
-    pass
-  
-  def obd_init(self):
-    pass
+  ###############################
+  #### READ GPS
+  ###############################
+  data['gps-lat'] = randData()
+  data['gps-lon'] = randData()
 
-  def gps_init(self):
-    pass
-
-  def read_mic(self):
-    pass
-
-  def read_acce(self):
-    return (
-      random.randint(0, 40) / 3.534,
-      random.randint(0, 40) / 3.534,
-      random.randint(0, 40) / 3.534
-    )
-    
-  def read_obd(self):    
-    return {
-      'speed': random.randint(0, 40) / 3.534,
-      'rpm': random.randint(0, 40) / 3.534,
-      'coolant': random.randint(0, 40) / 3.534,
-      'throttle': random.randint(0, 40) / 3.534,
-    }
-
-  def read_gps(self):
-    return {
-      'lat': str(random.randint(0, 40) / 3.534),
-      'lon': str(random.randint(0, 40) / 3.534),
-    }
+  data['time'] = time.time()
+  # print(data)
+  data_str = json.dumps(data)
+  # print(data_str)
+  fifo.write(data_str)
+  fifo.flush()
+  time.sleep(0.05)
