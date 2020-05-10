@@ -170,7 +170,11 @@ def draw_video_view():
 def draw_setting_view():
   for dev in setting_labels:
     label = setting_labels[dev]
-    text = label['text'] + str(label['value']) + label['unit']
+
+    if dev == 'gps':
+      text =  str(label['lat']) + ' ' + str(label['lon'])
+    else:
+      text = label['text'] + str(label['value']) + label['unit']
 
     text_color = WHITE
     if not label['online']:
