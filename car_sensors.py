@@ -47,7 +47,7 @@ class sensors:
     self.obd = obd.Async()
     self.obd.watch(obd.commands.SPEED)
     self.obd.watch(obd.commands.RPM)
-    self.obd.watch(obd.commands.SPECOOLANT_TEMPED)
+    self.obd.watch(obd.commands.COOLANT_TEMP)
     self.obd.watch(obd.commands.THROTTLE_POS)
     self.obd.start()
 
