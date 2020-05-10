@@ -17,6 +17,7 @@ class sensors:
   accelerometer = None
   gps = None
   obd = None
+  i2c = None
 
   def __init__(self):
     self.mic_init()
@@ -26,14 +27,16 @@ class sensors:
 
   def release(self):
     self.obd.stop()
-
+    self.i2c.deinit()
+    self.gps.close()     
+    
   def mic_init(self):
     pass
 
   def acce_init(self):
-    i2c = busio.I2C(board.SCL, board.SDA)
+    self.i2c = busio.I2C(board.SCL, board.SDA)
     time.sleep(1)
-    self.accelerometer = adafruit_mma8451.MMA8451(i2c) # Using default address
+    self.accelerometer = adafruit_mma8451.MMA8451(self.i2c) # Using default address
     # Set logging rate
     self.accelerometer.data_rate = adafruit_mma8451.DATARATE_400HZ #400Hz
   
