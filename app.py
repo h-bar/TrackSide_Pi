@@ -48,7 +48,7 @@ setting_labels = {
   'cam': {
     'dev': 'cam',
     'text': 'Video',
-    'pos': (60, 40),
+    'pos': (100, 30),
     'font_size': 30,
     'on': False,
     'on': False,
@@ -59,7 +59,7 @@ setting_labels = {
   'mic': {
     'dev': 'mic',
     'text': 'Audio',
-    'pos': (160, 40),
+    'pos': (200, 30),
     'font_size': 30,
     'on': False,
     'online': True,
@@ -69,7 +69,7 @@ setting_labels = {
   'gps': {
     'dev': 'gps',
     'text': 'GPS',
-    'pos': (260, 40),
+    'pos': (160, 70),
     'font_size': 30,
     'on': False,
     'online': True,
@@ -81,7 +81,7 @@ setting_labels = {
   'speed': {
     'dev': 'speed',
     'text': '',
-    'pos': (100, 100),
+    'pos': (100, 120),
     'font_size': 55,
     'on': False,
     'online': True,
@@ -91,7 +91,7 @@ setting_labels = {
   'rpm': {
     'dev': 'rpm',
     'text': '',
-    'pos': (240, 100),
+    'pos': (240, 120),
     'font_size': 40,
     'on': False,
     'online': True,
@@ -101,7 +101,7 @@ setting_labels = {
   'acce-x': {
     'dev': 'acce',
     'text': 'X: ',
-    'pos': (60, 160),
+    'pos': (60, 170),
     'font_size': 30,
     'on': True,
     'online': True,
@@ -111,7 +111,7 @@ setting_labels = {
   'acce-y': {
     'dev': 'acce',
     'text': 'Y: ',
-    'pos': (160, 160),
+    'pos': (160, 170),
     'font_size': 30,
     'on': True,
     'online': True,
@@ -121,7 +121,7 @@ setting_labels = {
   'acce-z': {
     'dev': 'acce',
     'text': 'Z: ',
-    'pos': (260, 160),
+    'pos': (260, 170),
     'font_size': 30,
     'on': True,
     'online': True,
@@ -131,7 +131,7 @@ setting_labels = {
   'coolant': {
     'dev': 'coolant',
     'text': 'Coolant: ',
-    'pos': (80, 200),
+    'pos': (80, 210),
     'font_size': 30,
     'on': True,
     'online': True,
@@ -141,7 +141,7 @@ setting_labels = {
   'throttle': {
     'dev': 'throttle',
     'text': 'Throttle: ',
-    'pos': (220, 200),
+    'pos': (220, 210),
     'font_size': 30,
     'on': False,
     'online': True,
