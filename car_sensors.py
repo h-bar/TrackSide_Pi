@@ -21,11 +21,11 @@ class sensors:
   def __init__(self):
     self.mic_init()
     self.acce_init()
-    self.obd_init()
+    self.obd_init_async()
     self.gps_init()
 
   def release(self):
-    pass
+    self.obd.stop()
 
   def mic_init(self):
     pass
@@ -39,7 +39,14 @@ class sensors:
   
   def obd_init(self):
     self.obd = obd.OBD()
-    pass
+
+  def obd_init_async(self):
+    self.obd = obd.Async()
+    self.obd.watch(obd.commands.SPEED)
+    self.obd.watch(obd.commands.RPM)
+    self.obd.watch(obd.commands.SPECOOLANT_TEMPED)
+    self.obd.watch(obd.commands.THROTTLE_POS)
+    self.obd.start()
 
   def gps_init(self):
     self.gps = serial.Serial(port = '/dev/ttyS0', baudrate = 9600)
