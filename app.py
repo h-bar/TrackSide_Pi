@@ -9,13 +9,10 @@ import random
 import ffmpeg
 import json
 
-# from fifo_sensors import sensors
-# from simu_sensors import sensors
-
-os.putenv('SDL_VIDEODRIVER', 'fbcon')   # Display on piTFT#
-os.putenv('SDL_FBDEV', '/dev/fb1')
-os.putenv('SDL_MOUSEDRV', 'TSLIB')     # Track mouse clicks on piTFT
-os.putenv('SDL_MOUSEDEV', '/dev/input/touchscreen')
+# os.putenv('SDL_VIDEODRIVER', 'fbcon')   # Display on piTFT#
+# os.putenv('SDL_FBDEV', '/dev/fb1')
+# os.putenv('SDL_MOUSEDRV', 'TSLIB')     # Track mouse clicks on piTFT
+# os.putenv('SDL_MOUSEDEV', '/dev/input/touchscreen')
 
 
 WHITE = 255, 255, 255
@@ -32,6 +29,7 @@ VIDEO_FILE = ''
 DATA_FILE = ''
 data_f = None
 CAM_DEV = '/dev/video0'
+FIFO = './sensors'
 
 pygame.init()
 # pygame.mouse.set_visible(False)
@@ -40,12 +38,11 @@ pygame.camera.init()
 screen = pygame.display.set_mode(SCREEN_SIZE)
 cam = pygame.camera.Camera(CAM_DEV, VIDEO_SIZE)
 frame = pygame.surface.Surface(VIDEO_SIZE, 0, screen)
-  
+updated = True
 
 cam.start()
 
-fifo = open('./sensors')
-fifo.readline()
+fifo = open(FIFO)
 
 setting_labels = {
   'cam': {
@@ -168,27 +165,32 @@ current_view = Views.Setting
 recording = False
 
 def draw_video_view():
+  screen.fill(BLACK)
   screen.blit(pygame.transform.scale(frame, SCREEN_SIZE), (0,0))
 
 def draw_setting_view():
-  for dev in setting_labels:
-    label = setting_labels[dev]
+  global updated
+  if updated:
+    screen.fill(BLACK)
+    for dev in setting_labels:
+      label = setting_labels[dev]
 
-    if dev == 'gps':
-      text =  str(label['lat']) + ' ' + str(label['lon'])
-    else:
-      text = label['text'] + str(label['value']) + label['unit']
+      if dev == 'gps':
+        text =  str(label['lat']) + ' ' + str(label['lon'])
+      else:
+        text = label['text'] + str(label['value']) + label['unit']
 
-    text_color = WHITE
-    if not label['online']:
-      text_color = GREY
-    elif label['on']:
-      text_color = GREEN
+      text_color = WHITE
+      if not label['online']:
+        text_color = GREY
+      elif label['on']:
+        text_color = GREEN
 
-    label_surface = pygame.font.Font(None, label['font_size']).render(text, True, text_color)
+      label_surface = pygame.font.Font(None, label['font_size']).render(text, True, text_color)
 
-    rect = label_surface.get_rect(center=label['pos'])
-    screen.blit(label_surface, rect)
+      rect = label_surface.get_rect(center=label['pos'])
+      screen.blit(label_surface, rect)
+    updated = False
 
 def notification(text):
   screen.fill(BLACK)
@@ -202,24 +204,29 @@ def notification(text):
 def collect_data():
   global frame
   global setting_labels
+  global updated
   if cam.query_image():
     frame = cam.get_image(frame)
 
   reading = fifo.readline().strip()
   if not reading == '':
-    # print(reading)
-    data = json.loads(reading)
-    print(data)
+    try:
+      # print(reading)
+      data = json.loads(reading)
+      print(data)
 
-    setting_labels['gps']['lat'] = round(data['gps-lat'], 2)
-    setting_labels['gps']['lon'] = round(data['gps-lon'], 2)
-    setting_labels['acce-x']['value'] = round(data['acce-x'], 2)
-    setting_labels['acce-y']['value'] = round(data['acce-y'], 2)
-    setting_labels['acce-z']['value'] = round(data['acce-z'], 2)
-    setting_labels['speed']['value'] = round(data['speed'], 1)
-    setting_labels['rpm']['value'] = round(data['rpm'], 1)
-    setting_labels['coolant']['value'] = round(data['coolant'], 1)
-    setting_labels['throttle']['value'] =round(data['throttle'], 1)
+      setting_labels['gps']['lat'] = round(data['gps-lat'], 2)
+      setting_labels['gps']['lon'] = round(data['gps-lon'], 2)
+      setting_labels['acce-x']['value'] = round(data['acce-x'], 2)
+      setting_labels['acce-y']['value'] = round(data['acce-y'], 2)
+      setting_labels['acce-z']['value'] = round(data['acce-z'], 2)
+      setting_labels['speed']['value'] = round(data['speed'], 1)
+      setting_labels['rpm']['value'] = round(data['rpm'], 1)
+      setting_labels['coolant']['value'] = round(data['coolant'], 1)
+      setting_labels['throttle']['value'] =round(data['throttle'], 1)
+      updated = True
+    except:
+      pass
 
 def handle_events():
   global current_view
@@ -247,7 +254,6 @@ def handle_events():
 
 
 def update_screen():
-  screen.fill(BLACK)
   if current_view == Views.Video:
     draw_video_view()
   elif current_view == Views.Setting:
@@ -337,7 +343,6 @@ def toggle_recording():
     time.sleep(1)
 
 def end_app():
-  s.release()
   exit(0)
 
 def button_cb(channel):
@@ -351,23 +356,23 @@ def button_cb(channel):
   elif channel == 27:
     _quit()
 
-# Quit Button Setup
-from signal import signal, SIGINT
-from sys import exit
+# # Quit Button Setup
+# from signal import signal, SIGINT
+# from sys import exit
 
-import RPi.GPIO as GPIO
-GPIO.setmode(GPIO.BCM)
+# import RPi.GPIO as GPIO
+# GPIO.setmode(GPIO.BCM)
 
-quit_button = 27
-GPIO.setup(quit_button, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+# quit_button = 27
+# GPIO.setup(quit_button, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 def _quit():
-    GPIO.cleanup()
+    # GPIO.cleanup()
     end_app()
 
-for pin in [17, 22, 23, 27]:
-    GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-    GPIO.add_event_detect(pin, GPIO.FALLING, callback=button_cb, bouncetime=300)
+# for pin in [17, 22, 23, 27]:
+#     GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+#     GPIO.add_event_detect(pin, GPIO.FALLING, callback=button_cb, bouncetime=300)
 
 if __name__ == "__main__":
   while True:
