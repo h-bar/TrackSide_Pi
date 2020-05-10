@@ -1,99 +1,115 @@
-import random
+import time
+import json
+import signal
 
-# Import packages for acccel
+FIFO = './sensors'
+
+###############################
+#### Acce Init
+###############################
+print('Initializing Accelerometer...')
 import board
 import busio
 import adafruit_mma8451
-import time
 
-#import packages for GPS
+i2c = busio.I2C(board.SCL, board.SDA)
+time.sleep(1)
+accelerometer = adafruit_mma8451.MMA8451(i2c) # Using default address
+# Set logging rate
+accelerometer.data_rate = adafruit_mma8451.DATARATE_400HZ #400Hz
+
+
+
+###############################
+#### GPS Init
+###############################
+print('Initializing GPS...')
 import serial #connecting to serial
 import pynmea2 #Package for parsing NMEA protocol
 
-#import packages for obd
+gps = serial.Serial(port = '/dev/ttyS0', baudrate = 9600)
+
+###############################
+#### OBD Init
+###############################
+print('Initializing OBD...')
 import obd
 
-class sensors:
-  accelerometer = None
-  gps = None
-  obd = None
-  i2c = None
+# _obd = obd.OBD()
+_obd = obd.Async()
+_obd.watch(obd.commands.SPEED)
+_obd.watch(obd.commands.RPM)
+_obd.watch(obd.commands.COOLANT_TEMP)
+_obd.watch(obd.commands.THROTTLE_POS)
+_obd.start()
 
-  def __init__(self):
-    self.mic_init()
-    self.acce_init()
-    self.obd_init_async()
-    self.gps_init()
+###############################
+#### FIFO Init
+###############################
+fifo = open(FIFO, 'w')
 
-  def release(self):
-    self.obd.stop()
-    self.i2c.deinit()
-    self.gps.close()     
-    
-  def mic_init(self):
+
+def signal_handler(sig, frame):
+  _obd.stop()
+  _obd.unwatch_all()
+  i2c.deinit()
+  gps.close()
+  print('All connections released!')
+  exit(0)
+
+signal.signal(signal.SIGINT, signal_handler)
+
+
+data = {
+  'time': 0,
+  'acce-x': 0,
+  'acce-y': 0,
+  'acce-z': 0,
+  'speed': 0,
+  'rpm': 0,
+  'coolant': 0,
+  'throttle': 0,
+  'gps-lon': 0,
+  'gps-lat': 0
+}
+
+print("Piping data into FIFO", FIFO)
+while True:
+  ###############################
+  #### READ Acce
+  ###############################
+  data['acce-x'], data['acce-y'], data['acce-z'] = accelerometer.acceleration
+
+  ###############################
+  #### READ OBD
+  ###############################
+  try:
+    data['speed'] = _obd.query(obd.commands.SPEED).value.magnitude
+    data['rpm'] = _obd.query(obd.commands.RPM).value.magnitude
+    data['coolant'] = _obd.query(obd.commands.COOLANT_TEMP).value.magnitude
+    data['throttle'] = _obd.query(obd.commands.THROTTLE_POS).value.magnitude
+  except:
     pass
 
-  def acce_init(self):
-    self.i2c = busio.I2C(board.SCL, board.SDA)
-    time.sleep(1)
-    self.accelerometer = adafruit_mma8451.MMA8451(self.i2c) # Using default address
-    # Set logging rate
-    self.accelerometer.data_rate = adafruit_mma8451.DATARATE_400HZ #400Hz
-  
-  def obd_init(self):
-    self.obd = obd.OBD()
 
-  def obd_init_async(self):
-    self.obd = obd.Async()
-    self.obd.watch(obd.commands.SPEED)
-    self.obd.watch(obd.commands.RPM)
-    self.obd.watch(obd.commands.COOLANT_TEMP)
-    self.obd.watch(obd.commands.THROTTLE_POS)
-    self.obd.start()
-
-  def gps_init(self):
-    self.gps = serial.Serial(port = '/dev/ttyS0', baudrate = 9600)
-
-  def read_mic(self):
+  ###############################
+  #### READ GPS
+  ###############################
+  msg = None
+  try:
+    line = gps.readline().decode("ascii") 
+    msg = pynmea2.parse(line)
+  except:
     pass
 
-  def read_acce(self):
-    x, y, z = self.accelerometer.acceleration
-    return (x, y, z)
+  if (not msg == None) and (msg.sentence_type == 'GGA'): 
+    data['gps-lat'] = msg.latitude
+    data['gps-lon'] = msg.longitude
 
-  def read_obd(self):
-    speed = None
-    rpm = None
-    coolant = None
-    throttle = None
-    try:
-      speed = self.obd.query(obd.commands.SPEED).value.magnitude
-      rpm = self.obd.query(obd.commands.RPM).value.magnitude
-      coolant = self.obd.query(obd.commands.COOLANT_TEMP).value.magnitude
-      throttle = self.obd.query(obd.commands.THROTTLE_POS).value.magnitude
-    except:
-      pass
-    
-    return {
-      'speed': speed,
-      'rpm': rpm,
-      'coolant': coolant,
-      'throttle': throttle,
-    }
-
-  def read_gps(self):
-    try:
-      line = self.gps.readline().decode("ascii") 
-      msg = pynmea2.parse(line)
-    except:
-      return None
-
-    if (msg.sentence_type != 'GGA'): 
-      return None
-    
-    data = {
-      'lat': msg.lat,
-      'lon': msg.lon
-    }
-
-    return data
+  data['time'] = time.time()
+  # print(data)
+  data_str = json.dumps(data)
+  # print(data_str)
+  fifo.write(data_str)
+  fifo.flush()
+  time.sleep(0.5)
