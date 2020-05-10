@@ -204,8 +204,8 @@ def collect_data():
 
   gps_data = s.read_gps()
   if gps_data != None:
-    setting_labels['gps']['lat'] = round(gps_data['lat'], 1)
-    setting_labels['gps']['lon'] = round(gps_data['lon'], 1)
+    setting_labels['gps']['lat'] = gps_data['lat']
+    setting_labels['gps']['lon'] = gps_data['lon']
     # print('GPS:', setting_labels['gps']['lat'],  setting_labels['gps']['lon'])
 
   x, y, z = s.read_acce()
