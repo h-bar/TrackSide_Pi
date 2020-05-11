@@ -1,0 +1,154 @@
+<!doctype html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='static/bootstrap.min.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='static/leaflet.css') }}" />
+
+  <title>Trackside Pi</title>
+</head>
+
+
+<body>
+  <div class="container">
+    <h1>{{data}}</h1>
+    <div class='row justify-content-center'>
+      {% if video is not none %}
+      <video controls>
+        <source src="{{ url_for('static', filename=video) }}" type="video/mp4">
+        Your browser does not support the video tag.
+      </video>
+      {% endif %}
+    </div>
+    <div  class='row justify-content-center' id='chart_holder'></div>
+    <div  class='row justify-content-center' id="map_holder" style="height: 800px;"></div>
+
+  </div>
+</body>
+
+<script src="{{ url_for('static', filename='static/leaflet.js') }}"></script>
+<script src="{{ url_for('static', filename='static/Chart.bundle.min.js') }}" ></script>
+<script src="{{ url_for('static', filename='static/Chart.bundle.js') }}"></script>
+
+<script>
+  chart_options = {
+    type: 'line',
+    fill: false,
+    responsive: true,
+    scales: {
+      xAxes: [{
+          type: 'time',
+          time: {
+            unit: 'millisecond'
+          }
+      }]
+    }
+  }
+  function renderMap(lanlon) {
+    lanlon = [[42.4410187,-76.4910089]]
+    var map = L.map('map_holder').setView(lanlon[0], 14);
+      L.tileLayer(
+        '{{ url_for('static', filename='static/maps') }}/{z}/{x}/{y}.png',
+        {
+          maxZoom: 15,
+          minZoom: 13
+        }
+      ).addTo(map);
+      var polyline = L.polyline(lanlon, {color: 'red'}).addTo(map);
+      map.fitBounds(polyline.getBounds());
+  }
+  function renderChart(data) {
+    var my_chart = document.createElement('canvas')
+    document.getElementById('chart_holder').appendChild(my_chart)
+
+    new Chart(my_chart.getContext('2d'), {
+      type: 'line',
+      data: data,
+      options: chart_options
+    });
+  }
+</script>
+<script>
+  fetch('/data/{{data}}')
+  .then((resp) => resp.json())
+  .then((data) => {
+    console.log(data)
+    if ('acce-x' in data) {
+      renderChart({
+        labels: data['timestamp'],
+        datasets: [{ 
+            data: data['acce-x'],
+            label: "Acce-X",
+            borderColor: "#3e95cd",
+            fill: false
+          }, { 
+            data: data['acce-y'],
+            label: "Acce-Y",
+            borderColor: "#8e5ea2",
+            fill: false
+          },{ 
+            data: data['acce-z'],
+            label: "Acce-Z",
+            borderColor: "#3cba9f",
+            fill: false
+          }
+        ]
+      })
+    }
+
+    if ('speed' in data) {
+      renderChart({
+        labels: data['timestamp'],
+        datasets: [{ 
+            data: data['speed'],
+            label: "Speed",
+            borderColor: "#3e95cd",
+            fill: false
+          }
+        ]
+      })
+    }
+
+    if ('coolant' in data) {
+      renderChart({
+        labels: data['timestamp'],
+        datasets: [{ 
+            data: data['coolant'],
+            label: "Coolant Temp",
+            borderColor: "#8e5ea2",
+            fill: false
+          }
+        ]
+      })
+    }
+    
+    if ('rpm' in data) {
+      renderChart({
+        labels: data['timestamp'],
+        datasets: [{ 
+            data: data['rpm'],
+            label: "RPM",
+            borderColor: "#3cba9f",
+            fill: false
+          }
+        ]
+      })
+    }
+    
+    if ('throttle' in data) {
+      renderChart({
+        labels: data['timestamp'],
+        datasets: [{ 
+            data: data['throttle'],
+            label: "Throttle Position",
+            borderColor: "#3e95cd",
+            fill: false
+          }
+        ]
+      })
+    }
+
+    if ('gps' in data) {renderMap(data['gps'])}
+  })
+</script>
