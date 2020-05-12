@@ -32,6 +32,25 @@ DATA_VIEW = 2
 #     GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 #     GPIO.add_event_detect(pin, GPIO.FALLING, callback=button_cb, bouncetime=300)
 
+
+def handle_buttons():
+  # for btn in [17, 22, 23, 27]:
+  #   if GPIO.input(btm) == GPIO.LOW:
+  #     button_cb(btn)
+  pass
+
+def end_app():
+  global r
+  if not r == None:
+    toggle_recording()
+
+  data.disabled = True
+  prompt('Existing...', 0)
+  s.stop()
+  # GPIO.cleanup()
+  exit(0)
+
+
 global s
 global r
 global view
@@ -98,19 +117,6 @@ class recorder():
       subprocess.run(['ffmpeg', '-r', str(fps), '-i', self.img_dir + '/%d.BMP', '-vcodec','libx264', '-pix_fmt', 'yuv420p', self.video_filename]) 
       data.disabled = False
       prompt('Video saved!', 2)
-
-
-def end_app():
-  global r
-  if not r == None:
-    toggle_recording()
-
-  data.disabled = True
-  prompt('Existing...', 0)
-  s.stop()
-  # GPIO.cleanup()
-  exit(0)
-
 
 def prompt(text, timeout):
   global view
@@ -266,6 +272,7 @@ def handle_events():
   global view
   global r
   events = pygame.event.get()
+  handle_buttons()
   for event in events:
     if event.type == pygame.KEYDOWN:
       if event.key == pygame.K_v:
@@ -288,30 +295,32 @@ def handle_events():
                   data.dev_readings['speed']['new'] = True
                   break
 
-if __name__ == "__main__":
-  
-  pygame.init()
-  # pygame.mouse.set_visible(False)
-  screen = pygame.display.set_mode(SCREEN_SIZE)
-
+if __name__ == "__main__":  
   global s
   global view
   global r
-  s = sensors()
-  r = None
-  view = DATA_VIEW
-  # view = CAM_VIEW
+  
+  
 
-  s.start()
   try:
+    pygame.init()
+    # pygame.mouse.set_visible(False)
+    screen = pygame.display.set_mode(SCREEN_SIZE)
+
+    s = sensors()
+    r = None
+    view = DATA_VIEW
+    # view = CAM_VIEW
+
+    s.start()
     while True:
       update_screen(screen)
       handle_events()
       if not r == None:
         r.log_data()
-
-
-  except KeyboardInterrupt:
-    pass
+  except Exception as e:
+    print('###############')
+    print('Error:', e)
+    print('###############')
 
   end_app()
