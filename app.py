@@ -20,23 +20,22 @@ CAM_VIEW = 1
 DATA_VIEW = 2
 
 
-# os.putenv('SDL_VIDEODRIVER', 'fbcon')   # Display on piTFT#
-# os.putenv('SDL_FBDEV', '/dev/fb1')
-# os.putenv('SDL_MOUSEDRV', 'TSLIB')     # Track mouse clicks on piTFT
-# os.putenv('SDL_MOUSEDEV', '/dev/input/touchscreen')
+os.putenv('SDL_VIDEODRIVER', 'fbcon')   # Display on piTFT#
+os.putenv('SDL_FBDEV', '/dev/fb1')
+os.putenv('SDL_MOUSEDRV', 'TSLIB')     # Track mouse clicks on piTFT
+os.putenv('SDL_MOUSEDEV', '/dev/input/touchscreen')
 
-# import RPi.GPIO as GPIO
-# GPIO.setmode(GPIO.BCM)
+import RPi.GPIO as GPIO
+GPIO.setmode(GPIO.BCM)
 
-# for pin in [17, 22, 23, 27]:
-#     GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-#     GPIO.add_event_detect(pin, GPIO.FALLING, callback=button_cb, bouncetime=300)
+for pin in [17, 22, 23, 27]:
+  GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 
 def handle_buttons():
-  # for btn in [17, 22, 23, 27]:
-  #   if GPIO.input(btm) == GPIO.LOW:
-  #     button_cb(btn)
+  for btn in [17, 22, 23, 27]:
+    if GPIO.input(btn) == GPIO.LOW:
+      button_cb(btn)
   pass
 
 def end_app():
@@ -47,7 +46,7 @@ def end_app():
   data.disabled = True
   prompt('Existing...', 0)
   s.stop()
-  # GPIO.cleanup()
+  GPIO.cleanup()
   exit(0)
 
 
@@ -304,7 +303,7 @@ if __name__ == "__main__":
 
   try:
     pygame.init()
-    # pygame.mouse.set_visible(False)
+    pygame.mouse.set_visible(False)
     screen = pygame.display.set_mode(SCREEN_SIZE)
 
     s = sensors()
