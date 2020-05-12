@@ -22,7 +22,7 @@ def randReading():
   return random.randint(0, 300) / 32.32
 
 class cam:
-  VIDEO_SIZE = (640,480)
+  VIDEO_SIZE = (480,640)
   CAM_DEV = '/dev/video0'
 
   def __init__(self):
@@ -48,7 +48,7 @@ class cam:
       if self.cam.query_image():
         # print('Got a frame')
         self.frame = self.cam.get_image(self.frame)
-        dev_readings['cam']['frame'] = self.frame
+        dev_readings['cam']['frame'] = pygame.transform.rotate(self.frame, 90)
         dev_readings['cam']['new'] = True
     print('Camera Stopped')
 
