@@ -1,0 +1,9 @@
+#!/bin/bash
+#
+# reload the stmpe_ts module to fix touchscreen issue 3/1/2019 
+#
+sudo rmmod stmpe_ts
+sudo modprobe stmpe_ts 
+echo "On line below, /dev/input/touchscreen should point to eventn"
+sleep 1
+ls -l /dev/input/touchscreen
