@@ -3,8 +3,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-  <link rel="stylesheet" href="{{ url_for('static', filename='static/bootstrap.min.css') }}" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='static/leaflet.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='web/bootstrap.min.css') }}" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='web/leaflet.css') }}" />
   <link href="https://vjs.zencdn.net/7.7.6/video-js.css" rel="stylesheet" />
   <title>Trackside Pi</title>
 </head>
@@ -15,13 +15,7 @@
     <h1>{{data}}</h1>
     <div">
       {% if video is not none %}
-      <video
-        id="my-video"
-        class="video-js"
-        controls
-        preload="auto"
-        data-setup="{}"
-      >
+      <video controls  class="embed-responsive embed-responsive-4by3">
         <source src="{{ url_for('static', filename=video) }}" type="video/mp4">
       </video>
       {% endif %}
@@ -31,10 +25,9 @@
 
   </div>
 </body>
-<script src="https://vjs.zencdn.net/7.7.6/video.js"></script>
-<script src="{{ url_for('static', filename='static/leaflet.js') }}"></script>
-<script src="{{ url_for('static', filename='static/Chart.bundle.min.js') }}" ></script>
-<script src="{{ url_for('static', filename='static/Chart.bundle.js') }}"></script>
+<script src="{{ url_for('static', filename='web/leaflet.js') }}"></script>
+<script src="{{ url_for('static', filename='web/Chart.bundle.min.js') }}" ></script>
+<script src="{{ url_for('static', filename='web/Chart.bundle.js') }}"></script>
 
 <script>
   chart_options = {
@@ -54,7 +47,7 @@
     lanlon = [[42.4410187,-76.4910089]]
     var map = L.map('map_holder').setView(lanlon[0], 14);
       L.tileLayer(
-        '{{ url_for('static', filename='static/maps') }}/{z}/{x}/{y}.png',
+        '{{ url_for('static', filename='web/maps') }}/{z}/{x}/{y}.png',
         {
           maxZoom: 15,
           minZoom: 13

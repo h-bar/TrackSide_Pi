@@ -6,8 +6,8 @@ import os
 import csv
 from datetime import datetime
 
-RCD_DIR = './rcd'
-app = Flask(__name__, static_folder='rcd')
+RCD_DIR = './static/rcd'
+app = Flask(__name__, static_folder='static')
 
 @app.route('/')
 def index():
@@ -18,6 +18,7 @@ def index():
         'name': rcd,
         'href': 'rcds/' + rcd
       })
+  rcds.sort(key = lambda i: i['name'], reverse=True)
   return render_template('index.html', rcds=rcds)
 
 @app.route('/rcds/<rcd>')
@@ -26,26 +27,27 @@ def rcd(rcd):
   if not os.path.exists(RCD_DIR + '/' + video_file):
     video_file=None
 
-  return render_template('rcd.html', video=video_file, data=rcd)
+  return render_template('rcd.html', video='rcd/' + video_file, data=rcd)
 
 @app.route('/data/<rcd>')
 def data(rcd):
   data_file = RCD_DIR + '/' + rcd + '/' + rcd + '.csv'
-  reader = csv.DictReader(open(data_file, 'r'), delimiter=';')
+  reader = csv.DictReader(open(data_file, 'r'), delimiter=',')
   data = {}
   data_dict = list(reader)
+  # print(data_dict)
 
   for field in data_dict[0]:
     if not field == '':
       data[field] = []
-    if field == 'gps-lat' or field == 'gps-lon':
+    if field == 'lat' or field == 'lon':
       data['gps'] = []
   # print(data)
 
   for row in data_dict:
     for field in data:
       if field == 'gps':
-        data[field].append([float(row['gps-lat']), float(row['gps-lon'])])
+        data[field].append([float(row['lat']), float(row['lon'])])
       else:
         data[field].append(float(row[field]))
       
