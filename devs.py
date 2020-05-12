@@ -72,7 +72,7 @@ class acce:
     print('Starting Accelerometer...')
     self._running = True
     while self._running:
-      time.sleep(1)
+      time.sleep(0.5)
       x, y, z = self.accelerometer.acceleration
       # x, y, z = randReading(), randReading(), randReading()
       
@@ -125,13 +125,12 @@ class obd_reader:
   def __init__(self):
     print('Initializing GPS...')
     self.obd = obd.OBD()
-
-    # # self.obd = obd.Async()
-    # # self.obd.watch(obd.commands.SPEED)
-    # # self.obd.watch(obd.commands.RPM)
-    # # self.obd.watch(obd.commands.COOLANT_TEMP)
-    # # self.obd.watch(obd.commands.THROTTLE_POS)
-    # # self.obd.start()
+    # self.obd = obd.Async()
+    # self.obd.watch(obd.commands.SPEED)
+    # self.obd.watch(obd.commands.RPM)
+    # self.obd.watch(obd.commands.COOLANT_TEMP)
+    # self.obd.watch(obd.commands.THROTTLE_POS)
+    # self.obd.start()
 
   def stop(self):
     print('Stoping OBD...')

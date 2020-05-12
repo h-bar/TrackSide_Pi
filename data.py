@@ -69,11 +69,11 @@ label_config = {
   },
   'gps': {
     'dev': 'gps',
-    'text': '%.4f      %.4f',
+    'text': '%.8f        %.8f',
     'pos': (160, 70),
     'font_size': 30,
     'online': True,
-    'width': 90
+    'width': 100
   }, 
   'speed': {
     'dev': 'speed',
