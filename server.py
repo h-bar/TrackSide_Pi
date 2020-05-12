@@ -27,7 +27,7 @@ def rcd(rcd):
   if not os.path.exists(RCD_DIR + '/' + video_file):
     video_file=None
 
-  return render_template('rcd.html', video='rcd/' + video_file, data=rcd)
+  return render_template('rcd.html', video= video_file, data=rcd)
 
 @app.route('/data/<rcd>')
 def data(rcd):

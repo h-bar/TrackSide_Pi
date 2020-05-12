@@ -16,7 +16,7 @@
     <div">
       {% if video is not none %}
       <video controls  class="embed-responsive embed-responsive-4by3">
-        <source src="{{ url_for('static', filename=video) }}" type="video/mp4">
+        <source src="{{ url_for('static', filename='rcd/' + video) }}" type="video/mp4">
       </video>
       {% endif %}
     </div>
