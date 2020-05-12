@@ -123,7 +123,7 @@ class gps:
 
 class obd_reader:
   def __init__(self):
-    print('Initializing GPS...')
+    print('Initializing OBD...')
     self.obd = obd.OBD()
     # self.obd = obd.Async()
     # self.obd.watch(obd.commands.SPEED)
