@@ -3,12 +3,14 @@ from threading import Thread
 import pygame.camera
 from pygame.locals import *
 
-# import board
-# import busio
-# import adafruit_mma8451
+import board
+import busio
+import adafruit_mma8451
 
-# import serial #connecting to serial
-# import pynmea2 #Package for parsing NMEA protocol
+import serial #connecting to serial
+import pynmea2 #Package for parsing NMEA protocol
+
+import obd
 
 import time
 import random
@@ -53,10 +55,10 @@ class cam:
 class acce:
   def __init__(self):
     print('Initializing Accelerometer...')
-    # self.i2c = busio.I2C(board.SCL, board.SDA)
-    # time.sleep(1)
-    # self.accelerometer = adafruit_mma8451.MMA8451(self.i2c) # Using default address
-    # self.accelerometer.data_rate = adafruit_mma8451.DATARATE_400HZ #400Hz
+    self.i2c = busio.I2C(board.SCL, board.SDA)
+    time.sleep(1)
+    self.accelerometer = adafruit_mma8451.MMA8451(self.i2c) # Using default address
+    self.accelerometer.data_rate = adafruit_mma8451.DATARATE_400HZ #400Hz
 
   def stop(self):
     print('Stoping Accelerometer...')
@@ -64,16 +66,15 @@ class acce:
 
   def release(self):
     print('Releasing Accelerometer...')
-    # self.i2c.deinit()
+    self.i2c.deinit()
 
   def run(self):
     print('Starting Accelerometer...')
     self._running = True
     while self._running:
       time.sleep(1)
-
-      # x, y, z = self.accelerometer.acceleration
-      x, y, z = randReading(), randReading(), randReading()
+      x, y, z = self.accelerometer.acceleration
+      # x, y, z = randReading(), randReading(), randReading()
       
       print('++Dev -> X:\t%.3f Y:\t%.3f Z:\t%.3f' %(x, y, z))
       dev_readings['acce']['x'] = x
@@ -85,7 +86,7 @@ class acce:
 class gps:
   def __init__(self):
     print('Initializing GPS...')
-    # self.gps = serial.Serial(port = '/dev/ttyS0', baudrate = 9600)
+    self.gps = serial.Serial(port = '/dev/ttyS0', baudrate = 9600)
 
   def stop(self):
     print('Stoping GPS...')
@@ -93,25 +94,26 @@ class gps:
 
   def release(self):
     print('Releasing GPS...')
-    # gps.close()
+    self.gps.close()
 
   def run(self):
     print('Starting GPS...')
     self._running = True
     while self._running:
-      # msg = None
-      # try:
-      #   line = gps.readline().decode("ascii") 
-      #   msg = pynmea2.parse(line)
-      # except:
-      #   pass
+      msg = None
+      try:
+        line = self.gps.readline().decode("ascii") 
+        msg = pynmea2.parse(line)
+      except Exception as err:
+        print("Error reading GPS:", err)
 
-      # if (not msg == None) and (msg.sentence_type == 'GGA'): 
-      #   lat = msg.latitude
-      #   lon = msg.longitude
-      if True:
-        time.sleep(2)
-        lat, lon = randReading(), randReading()
+      if (not msg == None) and (msg.sentence_type == 'GGA'): 
+        # print(msg)
+        lat = msg.latitude
+        lon = msg.longitude
+      # if True:
+      #   time.sleep(2)
+      #   lat, lon = randReading(), randReading()
 
         print('++Dev -> Lat:\t%.3f Lon:\t%.3f' %(lat, lon))
         dev_readings['gps']['lat'] = lat
@@ -119,10 +121,10 @@ class gps:
         dev_readings['gps']['new'] = True
     print('GPS Stopped')
 
-class obd:
+class obd_reader:
   def __init__(self):
     print('Initializing GPS...')
-    # self.obd = obd.OBD()
+    self.obd = obd.OBD()
 
     # # self.obd = obd.Async()
     # # self.obd.watch(obd.commands.SPEED)
@@ -137,22 +139,22 @@ class obd:
 
   def release(self):
     print('Releasing OBD...')
-    # # self.obd.stop()
-    # # self.obd.unwatch_all()
-    # obd.close()
+    # self.obd.stop()
+    # self.obd.unwatch_all()
+    self.obd.close()
 
   def run(self):
     print('Starting OBD...')
     self._running = True
     while self._running:
-      # if self.obd.is_connected():
-      #   speed = self.obd.query(obd.commands.SPEED).value.magnitude
-      #   rpm = self.obd.query(obd.commands.RPM).value.magnitude
-      #   coolant = self.obd.query(obd.commands.COOLANT_TEMP).value.magnitude
-      #   throttle = self.obd.query(obd.commands.THROTTLE_POS).value.magnitude
-      if True:
-        time.sleep(4)
-        speed, rpm, coolant, throttle = randReading(), randReading(), randReading(), randReading()
+      if self.obd.is_connected():
+        speed = self.obd.query(obd.commands.SPEED).value.magnitude
+        rpm = self.obd.query(obd.commands.RPM).value.magnitude
+        coolant = self.obd.query(obd.commands.COOLANT_TEMP).value.magnitude
+        throttle = self.obd.query(obd.commands.THROTTLE_POS).value.magnitude
+      # if True:
+      #   time.sleep(4)
+      #   speed, rpm, coolant, throttle = randReading(), randReading(), randReading(), randReading()
 
         print('++Dev -> Speed:\t%.3f RPM:\t%.3f Coolant:\t%.3f Throttle:\t%.3f' %(speed, rpm, coolant, throttle))
         dev_readings['speed']['value'] = speed
@@ -176,7 +178,7 @@ class sensors():
     self.devs.append(gps())
     self.threads.append(Thread(target=self.devs[-1].run))
 
-    self.devs.append(obd())
+    self.devs.append(obd_reader())
     self.threads.append(Thread(target=self.devs[-1].run))
 
 
@@ -192,7 +194,10 @@ class sensors():
       t.release()
     
 if __name__ == "__main__":
-  s = sensors()
-  s.start()
-  input()
-  s.stop()
+  try:
+    s = sensors()
+    s.start()
+    input()
+    s.stop()
+  except:
+    s.stop()
