@@ -5,7 +5,7 @@
 
   <link rel="stylesheet" href="{{ url_for('static', filename='static/bootstrap.min.css') }}" />
   <link rel="stylesheet" href="{{ url_for('static', filename='static/leaflet.css') }}" />
-
+  <link href="https://vjs.zencdn.net/7.7.6/video-js.css" rel="stylesheet" />
   <title>Trackside Pi</title>
 </head>
 
@@ -13,20 +13,25 @@
 <body>
   <div class="container">
     <h1>{{data}}</h1>
-    <div class='row justify-content-center'>
+    <div">
       {% if video is not none %}
-      <video controls>
+      <video
+        id="my-video"
+        class="video-js"
+        controls
+        preload="auto"
+        data-setup="{}"
+      >
         <source src="{{ url_for('static', filename=video) }}" type="video/mp4">
-        Your browser does not support the video tag.
       </video>
       {% endif %}
     </div>
     <div  class='row justify-content-center' id='chart_holder'></div>
-    <div  class='row justify-content-center' id="map_holder" style="height: 800px;"></div>
+    <div  class='row justify-content-center' id="map_holder" style="height: 400px;"></div>
 
   </div>
 </body>
-
+<script src="https://vjs.zencdn.net/7.7.6/video.js"></script>
 <script src="{{ url_for('static', filename='static/leaflet.js') }}"></script>
 <script src="{{ url_for('static', filename='static/Chart.bundle.min.js') }}" ></script>
 <script src="{{ url_for('static', filename='static/Chart.bundle.js') }}"></script>
@@ -55,9 +60,12 @@
           minZoom: 13
         }
       ).addTo(map);
+    if (lanlon.length >= 2) {
       var polyline = L.polyline(lanlon, {color: 'red'}).addTo(map);
       map.fitBounds(polyline.getBounds());
   }
+    }
+    
   function renderChart(data) {
     var my_chart = document.createElement('canvas')
     document.getElementById('chart_holder').appendChild(my_chart)
@@ -149,6 +157,6 @@
       })
     }
 
-    if ('gps' in data) {renderMap(data['gps'])}
+    renderMap(data['gps'])
   })
 </script>
