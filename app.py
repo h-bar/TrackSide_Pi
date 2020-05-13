@@ -44,7 +44,7 @@ def end_app():
     toggle_recording()
 
   data.disabled = True
-  prompt('Existing...', 0)
+  prompt('Exiting...', 0)
   s.stop()
   GPIO.cleanup()
   exit(0)
