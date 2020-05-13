@@ -93,7 +93,7 @@ label_config = {
   },
   'coolant': {
     'dev': 'coolant',
-    'text': 'Coolant:  %.1fF',
+    'text': 'Coolant:  %.1fC',
     'pos': (80, 210),
     'font_size': 30,
     'online': True,
