@@ -11,6 +11,7 @@ import serial #connecting to serial
 import pynmea2 #Package for parsing NMEA protocol
 
 import obd
+#print(obd.__file__)
 
 import time
 import random
@@ -72,14 +73,14 @@ class acce:
     print('Starting Accelerometer...')
     self._running = True
     while self._running:
-      time.sleep(0.5)
+      time.sleep(0.1) # normally .5
       x, y, z = self.accelerometer.acceleration
       # x, y, z = randReading(), randReading(), randReading()
       
       print('++Dev -> X:\t%.3f Y:\t%.3f Z:\t%.3f' %(x, y, z))
-      dev_readings['acce']['x'] = x
-      dev_readings['acce']['y'] = y
-      dev_readings['acce']['z'] = z
+      dev_readings['acce']['y'] = x/9.8 # needed adjustment to suit vehicle ref. fram
+      dev_readings['acce']['z'] = y/9.8 # converted to g's by factor of 9.8 m/s^2
+      dev_readings['acce']['x'] = z/9.8
       dev_readings['acce']['new'] = True
     print('Accelerometer Stopped')
 
@@ -125,12 +126,14 @@ class obd_reader:
   def __init__(self):
     print('Initializing OBD...')
     self.obd = obd.OBD()
-    # self.obd = obd.Async()
-    # self.obd.watch(obd.commands.SPEED)
-    # self.obd.watch(obd.commands.RPM)
-    # self.obd.watch(obd.commands.COOLANT_TEMP)
-    # self.obd.watch(obd.commands.THROTTLE_POS)
-    # self.obd.start()
+    #self.obd = obd.Async()
+    #self.obd.watch(obd.commands.SPEED)
+    #self.obd.watch(obd.commands.RPM)
+    #self.obd.watch(obd.commands.COOLANT_TEMP)
+    #self.obd.watch(obd.commands.THROTTLE_POS)
+    #self.obd.start()
+    #time.sleep(1) # give it time to produce somee data 
+    #obd.logger.setLevel(obd.logging.DEBUG) this line is printing obd debugging info
 
   def stop(self):
     print('Stoping OBD...')
@@ -138,8 +141,8 @@ class obd_reader:
 
   def release(self):
     print('Releasing OBD...')
-    # self.obd.stop()
-    # self.obd.unwatch_all()
+    #self.obd.stop()
+    #self.obd.unwatch_all()
     self.obd.close()
 
   def run(self):
@@ -151,9 +154,9 @@ class obd_reader:
         rpm = self.obd.query(obd.commands.RPM).value.magnitude
         coolant = self.obd.query(obd.commands.COOLANT_TEMP).value.magnitude
         throttle = self.obd.query(obd.commands.THROTTLE_POS).value.magnitude
-      # if True:
-      #   time.sleep(4)
-      #   speed, rpm, coolant, throttle = randReading(), randReading(), randReading(), randReading()
+      #if True:
+        # time.sleep(4)
+        #speed, rpm, coolant, throttle = randReading(), randReading(), randReading(), randReading()
 
         print('++Dev -> Speed:\t%.3f RPM:\t%.3f Coolant:\t%.3f Throttle:\t%.3f' %(speed, rpm, coolant, throttle))
         dev_readings['speed']['value'] = speed
