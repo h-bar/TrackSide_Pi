@@ -135,11 +135,13 @@ def toggle_recording():
 
   if r == None:
     print('Start recording...')
+    prompt('Start Recording...', 2)
     r = recorder()
   else:
     print('Stop recording...')
     r.stop()
     r = None
+    
 
 def button_cb(channel):
   global view
