@@ -40,7 +40,7 @@ def handle_buttons():
 
 def end_app():
   global r
-  if not r == None:
+  if not r is None:
     toggle_recording()
 
   data.disabled = True
@@ -137,7 +137,7 @@ def toggle_recording():
     print('Start recording...')
     prompt('Start Recording...', 2)
     r = recorder()
-  else:
+  elif time.time() - r.rcd_time > 5:
     print('Stop recording...')
     r.stop()
     r = None
