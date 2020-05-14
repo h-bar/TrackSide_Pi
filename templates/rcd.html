@@ -74,21 +74,21 @@
   .then((resp) => resp.json())
   .then((data) => {
     console.log(data)
-    if ('acce-x' in data) {
+    if ('x' in data) {
       renderChart({
         labels: data['timestamp'],
         datasets: [{ 
-            data: data['acce-x'],
+            data: data['x'],
             label: "Acce-X",
             borderColor: "#3e95cd",
             fill: false
           }, { 
-            data: data['acce-y'],
+            data: data['y'],
             label: "Acce-Y",
             borderColor: "#8e5ea2",
             fill: false
           },{ 
-            data: data['acce-z'],
+            data: data['z'],
             label: "Acce-Z",
             borderColor: "#3cba9f",
             fill: false
