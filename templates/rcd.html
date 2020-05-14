@@ -12,7 +12,7 @@
 <body>
   <div class="container">
     <h1>{{data}}</h1>
-    <div">
+    <div>
       {% if video is not none %}
       <video controls  class="embed-responsive embed-responsive-4by3">
         <source src="{{ url_for('static', filename='rcd/' + video) }}" type="video/mp4">
@@ -20,7 +20,7 @@
       {% endif %}
     </div>
     <div  class='row justify-content-center' id='chart_holder'></div>
-    <div  class='row justify-content-center' id="map_holder" style="height: 400px;"></div>
+    <div  class='row justify-content-center' id="map_holder" style="height: 800px;"></div>
 
   </div>
 </body>
@@ -43,7 +43,8 @@
     }
   }
   function renderMap(lanlon) {
-    lanlon = [[42.4410187,-76.4910089]]
+    // lanlon = [[42.4410187,-76.4910089]]
+    console.log(lanlon)
     var map = L.map('map_holder').setView(lanlon[0], 14);
       L.tileLayer(
         '{{ url_for('static', filename='web/maps') }}/{z}/{x}/{y}.png',
