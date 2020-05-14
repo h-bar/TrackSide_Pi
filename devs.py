@@ -74,14 +74,17 @@ class acce:
     self._running = True
     while self._running:
       time.sleep(0.1) # normally .5
-      x, y, z = self.accelerometer.acceleration
-      # x, y, z = randReading(), randReading(), randReading()
-      
-      print('++Dev -> X:\t%.3f Y:\t%.3f Z:\t%.3f' %(x, y, z))
-      dev_readings['acce']['y'] = x/9.8 # needed adjustment to suit vehicle ref. fram
-      dev_readings['acce']['z'] = y/9.8 # converted to g's by factor of 9.8 m/s^2
-      dev_readings['acce']['x'] = z/9.8
-      dev_readings['acce']['new'] = True
+      try:
+        x, y, z = self.accelerometer.acceleration
+        # x, y, z = randReading(), randReading(), randReading()
+        
+        print('++Dev -> X:\t%.3f Y:\t%.3f Z:\t%.3f' %(x, y, z))
+        dev_readings['acce']['y'] = x/9.8 # needed adjustment to suit vehicle ref. fram
+        dev_readings['acce']['z'] = y/9.8 # converted to g's by factor of 9.8 m/s^2
+        dev_readings['acce']['x'] = z/9.8
+        dev_readings['acce']['new'] = True
+      except Exception as err:
+         print("Error reading Accelerometer:", err)
     print('Accelerometer Stopped')
 
 class gps:
@@ -125,15 +128,15 @@ class gps:
 class obd_reader:
   def __init__(self):
     print('Initializing OBD...')
-    self.obd = obd.OBD()
-    #self.obd = obd.Async()
-    #self.obd.watch(obd.commands.SPEED)
-    #self.obd.watch(obd.commands.RPM)
-    #self.obd.watch(obd.commands.COOLANT_TEMP)
-    #self.obd.watch(obd.commands.THROTTLE_POS)
-    #self.obd.start()
-    #time.sleep(1) # give it time to produce somee data 
-    #obd.logger.setLevel(obd.logging.DEBUG) this line is printing obd debugging info
+    #self.obd = obd.OBD()
+    obd.logger.setLevel(obd.logging.DEBUG) # this line is printing obd debugging info
+    self.obd = obd.Async()
+    self.obd.watch(obd.commands.SPEED)
+    self.obd.watch(obd.commands.RPM)
+    self.obd.watch(obd.commands.COOLANT_TEMP)
+    self.obd.watch(obd.commands.THROTTLE_POS)
+    self.obd.start()
+    time.sleep(3) # give it time to produce somee data 
 
   def stop(self):
     print('Stoping OBD...')
@@ -141,29 +144,33 @@ class obd_reader:
 
   def release(self):
     print('Releasing OBD...')
-    #self.obd.stop()
-    #self.obd.unwatch_all()
+    self.obd.stop()
+    self.obd.unwatch_all()
     self.obd.close()
 
   def run(self):
     print('Starting OBD...')
     self._running = True
     while self._running:
-      if self.obd.is_connected():
-        speed = self.obd.query(obd.commands.SPEED).value.magnitude
-        rpm = self.obd.query(obd.commands.RPM).value.magnitude
-        coolant = self.obd.query(obd.commands.COOLANT_TEMP).value.magnitude
-        throttle = self.obd.query(obd.commands.THROTTLE_POS).value.magnitude
-      #if True:
-        # time.sleep(4)
-        #speed, rpm, coolant, throttle = randReading(), randReading(), randReading(), randReading()
+      time.sleep(.05)
+      try:
+        if self.obd.is_connected():
+          speed = self.obd.query(obd.commands.SPEED).value.magnitude
+          rpm = self.obd.query(obd.commands.RPM).value.magnitude
+          coolant = self.obd.query(obd.commands.COOLANT_TEMP).value.magnitude
+          throttle = self.obd.query(obd.commands.THROTTLE_POS).value.magnitude
+        #if True:
+          # time.sleep(4)
+          #speed, rpm, coolant, throttle = randReading(), randReading(), randReading(), randReading()
 
-        print('++Dev -> Speed:\t%.3f RPM:\t%.3f Coolant:\t%.3f Throttle:\t%.3f' %(speed, rpm, coolant, throttle))
-        dev_readings['speed']['value'] = speed
-        dev_readings['rpm']['value'] = rpm
-        dev_readings['coolant']['value'] = coolant
-        dev_readings['throttle']['value'] = throttle
-        dev_readings['speed']['new'] = True
+          print('++Dev -> Speed:\t%.3f RPM:\t%.3f Coolant:\t%.3f Throttle:\t%.3f' %(speed, rpm, coolant, throttle))
+          dev_readings['speed']['value'] = speed
+          dev_readings['rpm']['value'] = rpm
+          dev_readings['coolant']['value'] = coolant
+          dev_readings['throttle']['value'] = throttle
+          dev_readings['speed']['new'] = True
+      except Exception as err:
+         print("Error reading OBD:", err)
     print('OBD Stopped')
 
 class sensors():
