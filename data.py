@@ -61,7 +61,7 @@ label_config = {
   },
   'acce': {
     'dev': 'acce',
-    'text': 'X: %.2f  Y: %.2f  Z: %.2f ',
+    'text': 'X: %.2f  Y: %.2f  Z: %.2f g ',
     'pos': (160, 170),
     'font_size': 30,
     'online': True,
@@ -69,7 +69,7 @@ label_config = {
   },
   'gps': {
     'dev': 'gps',
-    'text': '%.8f        %.8f',
+    'text': 'lat: %.6f   long:  %.6f',
     'pos': (160, 70),
     'font_size': 30,
     'online': True,
@@ -77,7 +77,7 @@ label_config = {
   }, 
   'speed': {
     'dev': 'speed',
-    'text': '%d km/h',
+    'text': '%d mph',
     'pos': (100, 120),
     'font_size': 55,
     'online': True,
@@ -93,7 +93,7 @@ label_config = {
   },
   'coolant': {
     'dev': 'coolant',
-    'text': 'Coolant:  %.1fC',
+    'text': 'Coolant:  %.1fF',
     'pos': (80, 210),
     'font_size': 30,
     'online': True,
