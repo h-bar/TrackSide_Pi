@@ -53,6 +53,7 @@ def end_app():
 global s
 global r
 global view
+global t
 
 class recorder():
   root = './static/rcd'
@@ -131,13 +132,18 @@ def prompt(text, timeout):
 
 def toggle_recording():
   global r
+  global t
   data.dev_readings['speed']['new'] = True
+
+  if time.time() - t < 5:
+      return
+  t = time.time()
 
   if r == None:
     print('Start recording...')
     prompt('Start Recording...', 2)
     r = recorder()
-  elif time.time() - r.rcd_time > 5:
+  elif time.time() - r.rcd_time > 5: #Minimum 5 second recording.
     print('Stop recording...')
     r.stop()
     r = None
@@ -286,6 +292,7 @@ def handle_events():
         button_cb(27)
     elif r == None and view == DATA_VIEW and event.type == pygame.MOUSEBUTTONUP:
       pos = pygame.mouse.get_pos()
+      
       for dev in data.label_config:
         label = data.label_config[dev]
         if pos[0] > label['pos'][0] - (label['width']):
@@ -300,7 +307,7 @@ if __name__ == "__main__":
   global s
   global view
   global r
-  
+  global t
   
 
   try:
@@ -309,6 +316,7 @@ if __name__ == "__main__":
     screen = pygame.display.set_mode(SCREEN_SIZE)
 
     s = sensors()
+    t = time.time()
     r = None
     view = DATA_VIEW
     # view = CAM_VIEW
