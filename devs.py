@@ -164,9 +164,9 @@ class obd_reader:
           #speed, rpm, coolant, throttle = randReading(), randReading(), randReading(), randReading()
 
           print('++Dev -> Speed:\t%.3f RPM:\t%.3f Coolant:\t%.3f Throttle:\t%.3f' %(speed, rpm, coolant, throttle))
-          dev_readings['speed']['value'] = speed
+          dev_readings['speed']['value'] = speed * .621 #converting to mph from Kph
           dev_readings['rpm']['value'] = rpm
-          dev_readings['coolant']['value'] = coolant
+          dev_readings['coolant']['value'] = (coolant * 9/5)+32 #Convert to F from C 
           dev_readings['throttle']['value'] = throttle
           dev_readings['speed']['new'] = True
       except Exception as err:
