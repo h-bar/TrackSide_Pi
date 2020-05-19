@@ -1,2 +1,2 @@
-# TrackSide_Pi
+# TrackSide Pi
 As an alternative to expensive OEM data logger solutions, the team constructed a Raspberry Pi based embedded system that will log and display data from vehicle and external sensors. Key functions include communicating with the vehicle’s OBD-II (on-board diagnostics) port via a bluetooth transceiver, wired communication with external accelerometer, GPS and a camera. The Pi will log and record the data and display relevant numbers onto the PiTFT with a web interface developed to view previously recorded data and video
